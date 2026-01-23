@@ -25,8 +25,7 @@ const tileColors: Record<number, { bg: string; text: string }> = {
 
 export default function Game2048() {
   const { user, loading, addPoints } = useAuth();
-  const isLoggedIn = !loading && !!user;
-  const [board, setBoard] = useState<Board>(() => initializeBoard());
+    const [board, setBoard] = useState<Board>(() => initializeBoard());
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
@@ -232,14 +231,14 @@ export default function Game2048() {
 
   // Award points when game ends
   useEffect(() => {
-    if ((gameOver || won) && isLoggedIn && !pointsAwarded && score > 0) {
+    if ((gameOver || won) && user && !pointsAwarded && score > 0) {
       const points = Math.floor(score / 100) + (won ? 100 : 0);
       if (points > 0) {
         addPoints("2048", points, { score, won });
         setPointsAwarded(true);
       }
     }
-  }, [gameOver, won, isLoggedIn, pointsAwarded, score, addPoints]);
+  }, [gameOver, won, user, pointsAwarded, score, addPoints]);
 
   const resetGame = () => {
     setBoard(initializeBoard());
@@ -315,12 +314,12 @@ export default function Game2048() {
             <div className="absolute inset-0 bg-white/90 rounded-lg flex flex-col items-center justify-center">
               <p className="text-3xl font-bold text-[#776e65] mb-2">Game Over!</p>
               <p className="text-lg text-[#776e65] mb-2">Final Score: {score}</p>
-              {isLoggedIn && pointsAwarded && (
+              {user && pointsAwarded && (
                 <p className="text-sm text-green-600 font-medium mb-4">
                   +{Math.floor(score / 100)} points earned!
                 </p>
               )}
-              {!isLoggedIn && !loading && (
+              {!user && !loading && (
                 <p className="text-sm text-amber-600 mb-4">
                   <Link href="/auth" className="underline">Sign in</Link> to save points!
                 </p>
@@ -339,7 +338,7 @@ export default function Game2048() {
             <div className="absolute inset-0 bg-[#edc22e]/90 rounded-lg flex flex-col items-center justify-center">
               <p className="text-3xl font-bold text-white mb-2">You Win! 🎉</p>
               <p className="text-lg text-white mb-2">Score: {score}</p>
-              {isLoggedIn && pointsAwarded && (
+              {user && pointsAwarded && (
                 <p className="text-sm text-white/90 font-medium mb-4">
                   +{Math.floor(score / 100) + 100} points earned! (includes 100 bonus)
                 </p>

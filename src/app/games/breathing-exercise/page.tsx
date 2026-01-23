@@ -16,7 +16,7 @@ type PatternKey = keyof typeof breathingPatterns;
 
 export default function BreathingExerciseGame() {
   const { user, loading, addPoints } = useAuth();
-  const isLoggedIn = !loading && !!user;
+  const [pointsAwarded, setPointsAwarded] = useState(false);
   const [selectedPattern, setSelectedPattern] = useState<PatternKey>("box");
   const [phase, setPhase] = useState<BreathPhase>("inhale");
   const [timer, setTimer] = useState(0);
@@ -113,14 +113,20 @@ export default function BreathingExerciseGame() {
 
   // Award points when session finishes
   useEffect(() => {
-    if (gameState === "finished" && isLoggedIn) {
+    if (gameState === "finished" && user && !pointsAwarded) {
       const points = cyclesCompleted * 6;
       if (points > 0) {
-        addPoints("breathing-exercise", points, { cycles: cyclesCompleted, pattern: selectedPattern });
-        setPointsEarned(points);
+        setPointsAwarded(true);
+        addPoints("breathing-exercise", points, { cycles: cyclesCompleted, pattern: selectedPattern }).then((result) => {
+          if (!result.error) {
+            setPointsEarned(points);
+          } else {
+            setPointsAwarded(false);
+          }
+        });
       }
     }
-  }, [gameState, isLoggedIn, cyclesCompleted, selectedPattern, addPoints]);
+  }, [gameState, user, pointsAwarded, cyclesCompleted, selectedPattern, addPoints]);
 
   const getPhaseColor = () => {
     switch (phase) {
@@ -302,12 +308,12 @@ export default function BreathingExerciseGame() {
               You completed {cyclesCompleted} breathing cycles. Take a moment to notice how you feel.
             </p>
 
-            {isLoggedIn && pointsEarned > 0 && (
+            {pointsEarned > 0 && (
               <p className="text-sm text-green-600 font-medium mb-4">
                 +{pointsEarned} points earned!
               </p>
             )}
-            {!isLoggedIn && !loading && (
+            {!user && !loading && (
               <p className="text-sm text-amber-600 mb-4">
                 <Link href="/auth" className="underline">Sign in</Link> to save points!
               </p>

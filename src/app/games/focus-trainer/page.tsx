@@ -14,7 +14,6 @@ interface Target {
 
 export default function FocusTrainerGame() {
   const { user, loading, addPoints } = useAuth();
-  const isLoggedIn = !loading && !!user;
   const [targets, setTargets] = useState<Target[]>([]);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -23,6 +22,7 @@ export default function FocusTrainerGame() {
   const [gameState, setGameState] = useState<"ready" | "playing" | "finished">("ready");
   const [pointsEarned, setPointsEarned] = useState(0);
   const [targetsHit, setTargetsHit] = useState(0);
+  const [pointsAwarded, setPointsAwarded] = useState(false);
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const targetIdRef = useRef(0);
 
@@ -75,6 +75,7 @@ export default function FocusTrainerGame() {
     setTargets([]);
     setTargetsHit(0);
     setPointsEarned(0);
+    setPointsAwarded(false);
     targetIdRef.current = 0;
     setGameState("playing");
   }, []);
@@ -121,16 +122,23 @@ export default function FocusTrainerGame() {
     }
   }, [score, level]);
 
-  // Award points when game finishes
+  // Award points when game finishes and user is logged in
   useEffect(() => {
-    if (gameState === "finished" && isLoggedIn && score > 0) {
+    if (gameState === "finished" && user && !pointsAwarded && score > 0) {
       const points = Math.floor(score / 5) + (level > 3 ? 10 : 0);
       if (points > 0) {
-        addPoints("focus-trainer", points, { score, level, targetsHit });
-        setPointsEarned(points);
+        setPointsAwarded(true);
+        addPoints("focus-trainer", points, { score, level, targetsHit }).then((result) => {
+          if (!result.error) {
+            setPointsEarned(points);
+          } else {
+            console.error("Failed to add points:", result.error);
+            setPointsAwarded(false);
+          }
+        });
       }
     }
-  }, [gameState, isLoggedIn, score, level, targetsHit, addPoints]);
+  }, [gameState, user, pointsAwarded, score, level, targetsHit, addPoints]);
 
   const handleTargetClick = (target: Target) => {
     if (gameState !== "playing") return;
@@ -282,14 +290,19 @@ export default function FocusTrainerGame() {
               </div>
             </div>
 
-            {isLoggedIn && pointsEarned > 0 && (
+            {pointsEarned > 0 && (
               <p className="text-sm text-green-600 font-medium mb-4">
                 +{pointsEarned} points earned!
               </p>
             )}
-            {!isLoggedIn && !loading && (
+            {!user && !loading && (
               <p className="text-sm text-amber-600 mb-4">
                 <Link href="/auth" className="underline">Sign in</Link> to save points!
+              </p>
+            )}
+            {loading && (
+              <p className="text-sm text-[var(--muted)] mb-4">
+                Checking login status...
               </p>
             )}
 

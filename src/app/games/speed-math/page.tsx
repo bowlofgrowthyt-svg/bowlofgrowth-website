@@ -36,7 +36,6 @@ function generateProblem(difficulty: number): { num1: number; num2: number; oper
 
 export default function SpeedMathGame() {
   const { user, loading, addPoints } = useAuth();
-  const isLoggedIn = !loading && !!user;
   const [problem, setProblem] = useState<{ num1: number; num2: number; operation: Operation; answer: number } | null>(null);
   const [userAnswer, setUserAnswer] = useState("");
   const [score, setScore] = useState(0);
@@ -46,6 +45,7 @@ export default function SpeedMathGame() {
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [problemsSolved, setProblemsSolved] = useState(0);
+  const [pointsAwarded, setPointsAwarded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const nextProblem = useCallback(() => {
@@ -60,6 +60,7 @@ export default function SpeedMathGame() {
     setTimeLeft(60);
     setProblemsSolved(0);
     setPointsEarned(0);
+    setPointsAwarded(false);
     setGameState("playing");
     setProblem(generateProblem(0));
     setTimeout(() => inputRef.current?.focus(), 100);
@@ -84,14 +85,20 @@ export default function SpeedMathGame() {
 
   // Award points when game finishes
   useEffect(() => {
-    if (gameState === "finished" && isLoggedIn && score > 0) {
+    if (gameState === "finished" && user && !pointsAwarded && score > 0) {
       const points = Math.floor(score / 10) + Math.floor(problemsSolved / 2);
       if (points > 0) {
-        addPoints("speed-math", points, { score, problemsSolved });
-        setPointsEarned(points);
+        setPointsAwarded(true);
+        addPoints("speed-math", points, { score, problemsSolved }).then((result) => {
+          if (!result.error) {
+            setPointsEarned(points);
+          } else {
+            setPointsAwarded(false);
+          }
+        });
       }
     }
-  }, [gameState, isLoggedIn, score, problemsSolved, addPoints]);
+  }, [gameState, user, pointsAwarded, score, problemsSolved, addPoints]);
 
   const checkAnswer = () => {
     if (!problem || !userAnswer) return;
@@ -256,14 +263,19 @@ export default function SpeedMathGame() {
               </div>
             </div>
 
-            {isLoggedIn && pointsEarned > 0 && (
+            {pointsEarned > 0 && (
               <p className="text-sm text-green-600 font-medium mb-4">
                 +{pointsEarned} points earned!
               </p>
             )}
-            {!isLoggedIn && !loading && (
+            {!user && !loading && (
               <p className="text-sm text-amber-600 mb-4">
                 <Link href="/auth" className="underline">Sign in</Link> to save points!
+              </p>
+            )}
+            {loading && (
+              <p className="text-sm text-[var(--muted)] mb-4">
+                Checking login status...
               </p>
             )}
 

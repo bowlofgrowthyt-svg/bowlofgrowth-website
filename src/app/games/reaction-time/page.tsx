@@ -15,8 +15,6 @@ export default function ReactionTimeGame() {
   const [bestTime, setBestTime] = useState<number | null>(null);
   const [pointsEarned, setPointsEarned] = useState(0);
 
-  // Track if user is logged in (wait for auth to load)
-  const isLoggedIn = !loading && !!user;
 
   const startGame = useCallback(() => {
     setGameState("ready");
@@ -48,13 +46,13 @@ export default function ReactionTimeGame() {
       setGameState("result");
 
       // Award points based on reaction time (faster = more points)
-      if (isLoggedIn) {
+      if (user) {
         const points = time < 200 ? 50 : time < 250 ? 30 : time < 300 ? 20 : time < 350 ? 15 : 10;
         addPoints("reaction_time", points, { reactionTime: time });
         setPointsEarned((prev) => prev + points);
       }
     }
-  }, [gameState, startTime, bestTime, startGame, isLoggedIn, addPoints]);
+  }, [gameState, startTime, bestTime, startGame, user, addPoints]);
 
   const getAverageTime = () => {
     if (attempts.length === 0) return 0;
@@ -170,12 +168,12 @@ export default function ReactionTimeGame() {
               >
                 {getReactionRating(reactionTime).text}
               </p>
-              {isLoggedIn && (
+              {user && (
                 <p className="text-green-300 text-sm mb-2">
                   +{reactionTime < 200 ? 50 : reactionTime < 250 ? 30 : reactionTime < 300 ? 20 : reactionTime < 350 ? 15 : 10} points!
                 </p>
               )}
-              {!isLoggedIn && !loading && (
+              {!user && !loading && (
                 <p className="text-yellow-300 text-sm mb-2">
                   <Link href="/auth" className="underline">Sign in</Link> to save points!
                 </p>

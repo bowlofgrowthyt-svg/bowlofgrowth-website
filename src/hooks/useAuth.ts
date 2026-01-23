@@ -154,20 +154,53 @@ export function useAuth() {
     metadata?: Record<string, unknown>
   ) => {
     const supabase = createClient();
-    if (!supabase || !user) return { error: "Not authenticated or Supabase not configured" };
-
-    const { data, error } = await supabase.rpc("add_points", {
-      user_uuid: user.id,
-      activity: activityType,
-      points: points,
-      meta: metadata || null,
-    });
-
-    if (!error && profile) {
-      setProfile({ ...profile, points: data });
+    if (!supabase || !user) {
+      console.error("addPoints failed: not authenticated or Supabase not configured");
+      return { error: "Not authenticated or Supabase not configured" };
     }
 
-    return { data, error };
+    try {
+      // First try the RPC function
+      const { data, error } = await supabase.rpc("add_points", {
+        user_uuid: user.id,
+        activity: activityType,
+        points: points,
+        meta: metadata || null,
+      });
+
+      if (error) {
+        console.error("RPC add_points failed, using direct update:", error);
+        // Fallback: directly update the profile points
+        const currentPoints = profile?.points || 0;
+        const newPoints = currentPoints + points;
+
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ points: newPoints, updated_at: new Date().toISOString() })
+          .eq("id", user.id);
+
+        if (updateError) {
+          console.error("Direct update also failed:", updateError);
+          return { data: null, error: updateError };
+        }
+
+        // Update local state
+        if (profile) {
+          setProfile({ ...profile, points: newPoints });
+        }
+        return { data: newPoints, error: null };
+      }
+
+      // Update local state after successful RPC
+      if (profile) {
+        setProfile({ ...profile, points: data });
+      }
+
+      return { data, error: null };
+    } catch (err) {
+      console.error("addPoints exception:", err);
+      return { data: null, error: err };
+    }
   };
 
   const updateStreak = async () => {

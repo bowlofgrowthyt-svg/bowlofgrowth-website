@@ -115,7 +115,7 @@ function generatePattern(): Pattern {
 
 export default function PatternRecognitionGame() {
   const { user, loading, addPoints } = useAuth();
-  const isLoggedIn = !loading && !!user;
+  const [pointsAwarded, setPointsAwarded] = useState(false);
   const [pattern, setPattern] = useState<Pattern | null>(null);
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(0);
@@ -168,14 +168,20 @@ export default function PatternRecognitionGame() {
 
   // Award points when game finishes
   useEffect(() => {
-    if (gameState === "finished" && isLoggedIn && score > 0) {
+    if (gameState === "finished" && user && !pointsAwarded && score > 0) {
       const points = Math.floor(score / 4);
       if (points > 0) {
-        addPoints("pattern-recognition", points, { score, rounds: maxRounds });
-        setPointsEarned(points);
+        setPointsAwarded(true);
+        addPoints("pattern-recognition", points, { score, rounds: maxRounds }).then((result) => {
+          if (!result.error) {
+            setPointsEarned(points);
+          } else {
+            setPointsAwarded(false);
+          }
+        });
       }
     }
-  }, [gameState, isLoggedIn, score, addPoints]);
+  }, [gameState, user, pointsAwarded, score, addPoints]);
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -310,12 +316,12 @@ export default function PatternRecognitionGame() {
             <p className="text-4xl font-bold text-[var(--primary)] mb-2">{score}</p>
             <p className="text-[var(--muted)] mb-6">points scored</p>
 
-            {isLoggedIn && pointsEarned > 0 && (
+            {pointsEarned > 0 && (
               <p className="text-sm text-green-600 font-medium mb-4">
                 +{pointsEarned} points earned!
               </p>
             )}
-            {!isLoggedIn && !loading && (
+            {!user && !loading && (
               <p className="text-sm text-amber-600 mb-4">
                 <Link href="/auth" className="underline">Sign in</Link> to save points!
               </p>

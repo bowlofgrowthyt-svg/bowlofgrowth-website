@@ -32,13 +32,13 @@ function generateStroopWord(): { word: string; displayColor: string; correctColo
 
 export default function ColorMatchGame() {
   const { user, loading, addPoints } = useAuth();
-  const isLoggedIn = !loading && !!user;
   const [current, setCurrent] = useState<{ word: string; displayColor: string; correctColor: string } | null>(null);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [round, setRound] = useState(0);
   const [gameState, setGameState] = useState<"ready" | "playing" | "correct" | "wrong" | "finished">("ready");
   const [pointsEarned, setPointsEarned] = useState(0);
+  const [pointsAwarded, setPointsAwarded] = useState(false);
   const [options, setOptions] = useState<{ name: string; hex: string }[]>([]);
 
   const maxRounds = 20;
@@ -63,6 +63,7 @@ export default function ColorMatchGame() {
     setLives(3);
     setRound(0);
     setPointsEarned(0);
+    setPointsAwarded(false);
     nextRound();
   }, [nextRound]);
 
@@ -96,14 +97,20 @@ export default function ColorMatchGame() {
 
   // Award points when game finishes
   useEffect(() => {
-    if (gameState === "finished" && isLoggedIn && score > 0) {
+    if (gameState === "finished" && user && !pointsAwarded && score > 0) {
       const points = Math.floor(score / 3);
       if (points > 0) {
-        addPoints("color-match", points, { score, rounds: round });
-        setPointsEarned(points);
+        setPointsAwarded(true);
+        addPoints("color-match", points, { score, rounds: round }).then((result) => {
+          if (!result.error) {
+            setPointsEarned(points);
+          } else {
+            setPointsAwarded(false);
+          }
+        });
       }
     }
-  }, [gameState, isLoggedIn, score, round, addPoints]);
+  }, [gameState, user, pointsAwarded, score, round, addPoints]);
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -242,14 +249,19 @@ export default function ColorMatchGame() {
               </div>
             </div>
 
-            {isLoggedIn && pointsEarned > 0 && (
+            {pointsEarned > 0 && (
               <p className="text-sm text-green-600 font-medium mb-4">
                 +{pointsEarned} points earned!
               </p>
             )}
-            {!isLoggedIn && !loading && (
+            {!user && !loading && (
               <p className="text-sm text-amber-600 mb-4">
                 <Link href="/auth" className="underline">Sign in</Link> to save points!
+              </p>
+            )}
+            {loading && (
+              <p className="text-sm text-[var(--muted)] mb-4">
+                Checking login status...
               </p>
             )}
 

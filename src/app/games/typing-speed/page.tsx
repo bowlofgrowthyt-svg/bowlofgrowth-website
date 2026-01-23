@@ -24,7 +24,7 @@ const quotes = [
 
 export default function TypingSpeedGame() {
   const { user, loading, addPoints } = useAuth();
-  const isLoggedIn = !loading && !!user;
+  const [pointsAwarded, setPointsAwarded] = useState(false);
   const [quote, setQuote] = useState("");
   const [userInput, setUserInput] = useState("");
   const [gameState, setGameState] = useState<"ready" | "playing" | "finished">("ready");
@@ -77,18 +77,24 @@ export default function TypingSpeedGame() {
 
   // Award points when game finishes
   useEffect(() => {
-    if (gameState === "finished" && isLoggedIn && wpm > 0) {
+    if (gameState === "finished" && user && !pointsAwarded && wpm > 0) {
       // Points based on WPM + accuracy bonus
       const basePoints = Math.floor(wpm / 2);
       const accuracyBonus = accuracy >= 95 ? 10 : accuracy >= 90 ? 5 : 0;
       const totalPoints = basePoints + accuracyBonus;
 
       if (totalPoints > 0) {
-        addPoints("typing-speed", totalPoints, { wpm, accuracy });
-        setPointsEarned(totalPoints);
+        setPointsAwarded(true);
+        addPoints("typing-speed", totalPoints, { wpm, accuracy }).then((result) => {
+          if (!result.error) {
+            setPointsEarned(totalPoints);
+          } else {
+            setPointsAwarded(false);
+          }
+        });
       }
     }
-  }, [gameState, isLoggedIn, wpm, accuracy, addPoints]);
+  }, [gameState, user, pointsAwarded, wpm, accuracy, addPoints]);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -250,12 +256,12 @@ export default function TypingSpeedGame() {
               </div>
             </div>
 
-            {isLoggedIn && pointsEarned > 0 && (
+            {pointsEarned > 0 && (
               <p className="text-sm text-green-600 font-medium mb-4">
                 +{pointsEarned} points earned!
               </p>
             )}
-            {!isLoggedIn && !loading && (
+            {!user && !loading && (
               <p className="text-sm text-amber-600 mb-4">
                 <a href="/auth" className="underline">Sign in</a> to save points!
               </p>

@@ -42,7 +42,6 @@ function scrambleWord(word: string): string {
 
 export default function WordScrambleGame() {
   const { user, loading, addPoints } = useAuth();
-  const isLoggedIn = !loading && !!user;
   const [currentWord, setCurrentWord] = useState<{ word: string; hint: string } | null>(null);
   const [scrambled, setScrambled] = useState("");
   const [userGuess, setUserGuess] = useState("");
@@ -52,6 +51,7 @@ export default function WordScrambleGame() {
   const [usedWords, setUsedWords] = useState<string[]>([]);
   const [showHint, setShowHint] = useState(false);
   const [pointsEarned, setPointsEarned] = useState(0);
+  const [pointsAwarded, setPointsAwarded] = useState(false);
 
   const maxRounds = 10;
 
@@ -75,6 +75,7 @@ export default function WordScrambleGame() {
     setUsedWords([newWord.word]);
     setShowHint(false);
     setPointsEarned(0);
+    setPointsAwarded(false);
   }, [getNewWord]);
 
   const nextRound = useCallback(() => {
@@ -113,14 +114,20 @@ export default function WordScrambleGame() {
 
   // Award points when game finishes
   useEffect(() => {
-    if (gameState === "finished" && isLoggedIn && score > 0) {
+    if (gameState === "finished" && user && !pointsAwarded && score > 0) {
       const points = Math.floor(score / 2);
       if (points > 0) {
-        addPoints("word-scramble", points, { score, rounds: maxRounds });
-        setPointsEarned(points);
+        setPointsAwarded(true);
+        addPoints("word-scramble", points, { score, rounds: maxRounds }).then((result) => {
+          if (!result.error) {
+            setPointsEarned(points);
+          } else {
+            setPointsAwarded(false);
+          }
+        });
       }
     }
-  }, [gameState, isLoggedIn, score, addPoints]);
+  }, [gameState, user, pointsAwarded, score, addPoints]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && gameState === "playing") {
@@ -261,14 +268,19 @@ export default function WordScrambleGame() {
             <p className="text-4xl font-bold text-[var(--primary)] mb-2">{score}</p>
             <p className="text-[var(--muted)] mb-6">points scored</p>
 
-            {isLoggedIn && pointsEarned > 0 && (
+            {pointsEarned > 0 && (
               <p className="text-sm text-green-600 font-medium mb-4">
                 +{pointsEarned} points earned!
               </p>
             )}
-            {!isLoggedIn && !loading && (
+            {!user && !loading && (
               <p className="text-sm text-amber-600 mb-4">
                 <Link href="/auth" className="underline">Sign in</Link> to save points!
+              </p>
+            )}
+            {loading && (
+              <p className="text-sm text-[var(--muted)] mb-4">
+                Checking login status...
               </p>
             )}
 

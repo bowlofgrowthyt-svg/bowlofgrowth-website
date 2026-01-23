@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function NumberSequenceGame() {
   const { user, loading, addPoints } = useAuth();
-  const isLoggedIn = !loading && !!user;
+  const [pointsAwarded, setPointsAwarded] = useState(false);
   const [sequence, setSequence] = useState<number[]>([]);
   const [userSequence, setUserSequence] = useState<number[]>([]);
   const [level, setLevel] = useState(1);
@@ -29,6 +29,7 @@ export default function NumberSequenceGame() {
     setScore(0);
     setBestLevel(0);
     setPointsEarned(0);
+    setPointsAwarded(false);
     const newSequence = generateSequence(3);
     setSequence(newSequence);
     setUserSequence([]);
@@ -93,14 +94,20 @@ export default function NumberSequenceGame() {
 
   // Award points when game finishes
   useEffect(() => {
-    if (gameState === "finished" && isLoggedIn && score > 0) {
+    if (gameState === "finished" && user && !pointsAwarded && score > 0) {
       const points = Math.floor(score / 5) + (level > 5 ? 10 : 0);
       if (points > 0) {
-        addPoints("number-sequence", points, { score, level: level - 1 });
-        setPointsEarned(points);
+        setPointsAwarded(true);
+        addPoints("number-sequence", points, { score, level: level - 1 }).then((result) => {
+          if (!result.error) {
+            setPointsEarned(points);
+          } else {
+            setPointsAwarded(false);
+          }
+        });
       }
     }
-  }, [gameState, isLoggedIn, score, level, addPoints]);
+  }, [gameState, user, pointsAwarded, score, level, addPoints]);
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -258,14 +265,19 @@ export default function NumberSequenceGame() {
               </div>
             </div>
 
-            {isLoggedIn && pointsEarned > 0 && (
+            {pointsEarned > 0 && (
               <p className="text-sm text-green-600 font-medium mb-4">
                 +{pointsEarned} points earned!
               </p>
             )}
-            {!isLoggedIn && !loading && (
+            {!user && !loading && (
               <p className="text-sm text-amber-600 mb-4">
                 <Link href="/auth" className="underline">Sign in</Link> to save points!
+              </p>
+            )}
+            {loading && (
+              <p className="text-sm text-[var(--muted)] mb-4">
+                Checking login status...
               </p>
             )}
 

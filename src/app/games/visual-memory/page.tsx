@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function VisualMemoryGame() {
   const { user, loading, addPoints } = useAuth();
-  const isLoggedIn = !loading && !!user;
+  const [pointsAwarded, setPointsAwarded] = useState(false);
   const [gridSize, setGridSize] = useState(3);
   const [pattern, setPattern] = useState<number[]>([]);
   const [userPattern, setUserPattern] = useState<number[]>([]);
@@ -91,14 +91,20 @@ export default function VisualMemoryGame() {
 
   // Award points when game finishes
   useEffect(() => {
-    if (gameState === "finished" && isLoggedIn && score > 0) {
+    if (gameState === "finished" && user && !pointsAwarded && score > 0) {
       const points = Math.floor(score / 5) + (level > 5 ? 15 : 0);
       if (points > 0) {
-        addPoints("visual-memory", points, { score, level: level - 1 });
-        setPointsEarned(points);
+        setPointsAwarded(true);
+        addPoints("visual-memory", points, { score, level: level - 1 }).then((result) => {
+          if (!result.error) {
+            setPointsEarned(points);
+          } else {
+            setPointsAwarded(false);
+          }
+        });
       }
     }
-  }, [gameState, isLoggedIn, score, level, addPoints]);
+  }, [gameState, user, pointsAwarded, score, level, addPoints]);
 
   const getCellClass = (index: number) => {
     if (gameState === "showing") {
@@ -246,12 +252,12 @@ export default function VisualMemoryGame() {
               </div>
             </div>
 
-            {isLoggedIn && pointsEarned > 0 && (
+            {pointsEarned > 0 && (
               <p className="text-sm text-green-600 font-medium mb-4">
                 +{pointsEarned} points earned!
               </p>
             )}
-            {!isLoggedIn && !loading && (
+            {!user && !loading && (
               <p className="text-sm text-amber-600 mb-4">
                 <Link href="/auth" className="underline">Sign in</Link> to save points!
               </p>
