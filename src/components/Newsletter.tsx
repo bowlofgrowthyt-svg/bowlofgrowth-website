@@ -83,7 +83,6 @@ export default function Newsletter() {
   };
 
   const handleButtonClick = () => {
-    alert("Button clicked! Email: " + email);
     doSubscribe();
   };
 
