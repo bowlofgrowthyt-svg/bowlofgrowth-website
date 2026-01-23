@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 const categories = [
   { name: "Personal Growth", slug: "personal-growth" },
@@ -16,6 +17,13 @@ const categories = [
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, profile, loading, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsProfileOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[var(--border)]">
@@ -84,12 +92,59 @@ export default function Header() {
               Brain Games
             </Link>
 
-            <Link
-              href="/auth"
-              className="bg-[var(--primary)] text-white px-5 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
-            >
-              Sign In
-            </Link>
+            {loading ? (
+              <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+            ) : user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  onBlur={() => setTimeout(() => setIsProfileOpen(false), 150)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--secondary)] hover:bg-[var(--primary)]/10 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center text-white font-medium">
+                    {user.email?.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-[var(--foreground)] hidden lg:block">
+                    {profile?.full_name || user.email?.split("@")[0]}
+                  </span>
+                </button>
+
+                {isProfileOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-[var(--border)] py-2 fade-in">
+                    <div className="px-4 py-2 border-b border-[var(--border)]">
+                      <p className="text-sm font-medium text-[var(--foreground)]">
+                        {profile?.full_name || "User"}
+                      </p>
+                      <p className="text-xs text-[var(--muted)] truncate">{user.email}</p>
+                      {profile?.points !== undefined && (
+                        <p className="text-xs text-[var(--primary)] mt-1">
+                          {profile.points} points
+                        </p>
+                      )}
+                    </div>
+                    <Link
+                      href="/games"
+                      className="block px-4 py-2 text-sm text-[var(--muted)] hover:text-[var(--primary)] hover:bg-[var(--secondary)] transition-colors"
+                    >
+                      My Games
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                className="bg-[var(--primary)] text-white px-5 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -144,13 +199,38 @@ export default function Header() {
                 Brain Games
               </Link>
 
-              <Link
-                href="/auth"
-                className="mx-4 mt-2 bg-[var(--primary)] text-white px-5 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-center"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Sign In
-              </Link>
+              {user ? (
+                <div className="mx-4 mt-2 p-3 bg-[var(--secondary)] rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-[var(--primary)] flex items-center justify-center text-white font-medium">
+                      {user.email?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[var(--foreground)]">
+                        {profile?.full_name || user.email?.split("@")[0]}
+                      </p>
+                      <p className="text-xs text-[var(--muted)]">{user.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/auth"
+                  className="mx-4 mt-2 bg-[var(--primary)] text-white px-5 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-center block"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
+              )}
             </nav>
           </div>
         )}
