@@ -82,9 +82,8 @@ export default function Newsletter() {
     doSubscribe();
   };
 
-  const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleButtonClick = () => {
+    alert("Button clicked! Email: " + email);
     doSubscribe();
   };
 
