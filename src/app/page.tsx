@@ -47,68 +47,92 @@ export default function Home() {
                     Latest Articles
                   </h2>
                 </div>
-                <Link
-                  href="/category/personal-growth"
-                  className="text-[var(--primary)] font-medium hover:underline flex items-center gap-1"
-                >
-                  View All
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
+                {recentArticles.length > 0 && (
+                  <Link
+                    href="/category/personal-growth"
+                    className="text-[var(--primary)] font-medium hover:underline flex items-center gap-1"
+                  >
+                    View All
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                )}
               </div>
 
               {/* Article Grid */}
-              <div className="space-y-6">
-                {recentArticles.map((article) => (
-                  <article
-                    key={article.id}
-                    className="flex flex-col sm:flex-row gap-4 bg-white rounded-xl p-4 shadow-sm border border-[var(--border)] hover:shadow-md transition-shadow"
-                  >
-                    <Link
-                      href={`/articles/${article.slug}`}
-                      className="sm:w-48 sm:h-32 h-48 flex-shrink-0 rounded-lg overflow-hidden relative"
+              {recentArticles.length > 0 ? (
+                <div className="space-y-6">
+                  {recentArticles.map((article) => (
+                    <article
+                      key={article.id}
+                      className="flex flex-col sm:flex-row gap-4 bg-white rounded-xl p-4 shadow-sm border border-[var(--border)] hover:shadow-md transition-shadow"
                     >
-                      <img
-                        src={article.image}
-                        alt={article.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </Link>
-                    <div className="flex-1 flex flex-col justify-center">
                       <Link
-                        href={`/category/${article.categorySlug}`}
-                        className="text-[var(--primary)] text-xs font-medium uppercase tracking-wide mb-1 hover:underline"
+                        href={`/articles/${article.slug}`}
+                        className="sm:w-48 sm:h-32 h-48 flex-shrink-0 rounded-lg overflow-hidden relative"
                       >
-                        {article.category}
+                        <img
+                          src={article.image}
+                          alt={article.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
                       </Link>
-                      <Link href={`/articles/${article.slug}`}>
-                        <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2 hover:text-[var(--primary)] transition-colors line-clamp-2">
-                          {article.title}
-                        </h3>
-                      </Link>
-                      <p className="text-sm text-[var(--muted)] line-clamp-2 mb-2">
-                        {article.excerpt}
-                      </p>
-                      <div className="flex items-center gap-3 text-xs text-[var(--muted)]">
-                        <span>{article.author}</span>
-                        <span>•</span>
-                        <span>{article.readTime} min read</span>
+                      <div className="flex-1 flex flex-col justify-center">
+                        <Link
+                          href={`/category/${article.categorySlug}`}
+                          className="text-[var(--primary)] text-xs font-medium uppercase tracking-wide mb-1 hover:underline"
+                        >
+                          {article.category}
+                        </Link>
+                        <Link href={`/articles/${article.slug}`}>
+                          <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2 hover:text-[var(--primary)] transition-colors line-clamp-2">
+                            {article.title}
+                          </h3>
+                        </Link>
+                        <p className="text-sm text-[var(--muted)] line-clamp-2 mb-2">
+                          {article.excerpt}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-[var(--muted)]">
+                          <span>{article.author}</span>
+                          <span>•</span>
+                          <span>{article.readTime} min read</span>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-[var(--border)] p-12 text-center">
+                  <div className="w-16 h-16 bg-[var(--secondary)] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-3xl">🌱</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2">
+                    Fresh Start
+                  </h3>
+                  <p className="text-[var(--muted)] mb-6">
+                    New articles are on the way. Check back soon for inspiring content!
+                  </p>
+                  <Link
+                    href="/games"
+                    className="inline-block px-6 py-3 bg-[var(--primary)] text-white rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
+                  >
+                    Play Brain Games While You Wait
+                  </Link>
+                </div>
+              )}
 
               {/* Load More Button */}
-              <div className="text-center mt-8">
-                <Link
-                  href="/category/personal-growth"
-                  className="inline-block px-8 py-3 bg-[var(--secondary)] text-[var(--primary)] rounded-full font-medium hover:bg-[var(--primary)] hover:text-white transition-colors"
-                >
-                  Load More Articles
-                </Link>
-              </div>
+              {recentArticles.length > 6 && (
+                <div className="text-center mt-8">
+                  <Link
+                    href="/category/personal-growth"
+                    className="inline-block px-8 py-3 bg-[var(--secondary)] text-[var(--primary)] rounded-full font-medium hover:bg-[var(--primary)] hover:text-white transition-colors"
+                  >
+                    Load More Articles
+                  </Link>
+                </div>
+              )}
             </section>
           </div>
 
