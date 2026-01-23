@@ -86,3 +86,46 @@ button:focus-visible {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px -8px rgba(124, 58, 237, 0.2);
 }
+
+/* Video suggestion box in articles */
+.video-suggestion {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1);
+}
+
+.video-suggestion p {
+  margin: 0;
+  color: #92400e;
+}
+
+.video-suggestion p:first-child {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.video-suggestion p:last-child {
+  font-size: 0.875rem;
+}
+
+.video-suggestion strong {
+  color: #78350f;
+}
+
+/* Article internal links styling */
+article a[href^="/articles/"] {
+  color: var(--primary);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--primary-light);
+  text-underline-offset: 2px;
+  transition: all 0.2s ease;
+}
+
+article a[href^="/articles/"]:hover {
+  color: var(--primary-dark);
+  text-decoration-color: var(--primary);
+}

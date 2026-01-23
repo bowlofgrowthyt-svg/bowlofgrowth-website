@@ -233,6 +233,8 @@ export default function AdminPage() {
   const [batchMode, setBatchMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState("");
+  const [isPushing, setIsPushing] = useState(false);
+  const [pushSuccess, setPushSuccess] = useState("");
 
   // Filter suggested topics to only show fresh ones (not already in articles.ts)
   const getFreshTopics = (categoryName: string) => {
@@ -343,12 +345,41 @@ export default function AdminPage() {
         throw new Error(data.error || "Failed to save articles");
       }
 
-      setSaveSuccess(`${data.addedCount} articles saved to articles.ts! Refresh page to see updated suggestions.`);
+      setSaveSuccess(`${data.addedCount} articles saved! Click "Push to Live" to deploy.`);
       setGeneratedArticles([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save articles");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const pushToLive = async () => {
+    setIsPushing(true);
+    setPushSuccess("");
+    setError("");
+
+    try {
+      const response = await fetch("/api/push-to-live", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to push to live");
+      }
+
+      if (data.alreadyUpToDate) {
+        setPushSuccess("Already up to date! No changes to push.");
+      } else {
+        setPushSuccess(`Pushed to live! ${data.changedFiles} files updated. Vercel will auto-deploy in ~30 seconds.`);
+        setSaveSuccess("");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to push to live");
+    } finally {
+      setIsPushing(false);
     }
   };
 
@@ -381,17 +412,37 @@ export default function AdminPage() {
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-[var(--primary)] hover:underline mb-4"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Site
-          </Link>
+          <div className="flex items-center justify-between mb-4">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-[var(--primary)] hover:underline"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Site
+            </Link>
+            <button
+              onClick={pushToLive}
+              disabled={isPushing}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              {isPushing ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Pushing...
+                </>
+              ) : (
+                <>
+                  🚀 Push to Live
+                </>
+              )}
+            </button>
+          </div>
           <h1 className="text-3xl font-bold text-[var(--foreground)]">Article Generator</h1>
-          <p className="text-[var(--muted)]">Generate articles using Claude AI</p>
+          <p className="text-[var(--muted)]">Generate SEO-optimized articles using Claude AI</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -705,11 +756,31 @@ export default function AdminPage() {
 
             {saveSuccess && (
               <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded-xl">
-                <div className="flex items-center gap-2 text-green-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="font-medium">{saveSuccess}</span>
+                  </div>
+                  <button
+                    onClick={pushToLive}
+                    disabled={isPushing}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {isPushing ? "Pushing..." : "🚀 Push to Live"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {pushSuccess && (
+              <div className="mt-4 p-4 bg-blue-100 border border-blue-300 rounded-xl">
+                <div className="flex items-center gap-2 text-blue-800">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="font-medium">{saveSuccess}</span>
+                  <span className="font-medium">{pushSuccess}</span>
                 </div>
               </div>
             )}
