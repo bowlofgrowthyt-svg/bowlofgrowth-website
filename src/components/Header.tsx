@@ -95,12 +95,16 @@ export default function Header() {
             {loading ? (
               <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
             ) : user ? (
-              <div className="relative">
+              <div className="relative z-50">
                 <button
+                  type="button"
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--secondary)] hover:bg-[var(--primary)]/10 transition-colors cursor-pointer"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 hover:bg-purple-200 transition-colors cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] flex items-center justify-center text-white font-bold text-sm">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                    style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' }}
+                  >
                     {(profile?.full_name?.charAt(0) || user.email?.charAt(0) || "U").toUpperCase()}
                   </div>
                   <span className="text-sm font-medium text-[var(--foreground)] hidden lg:block max-w-[120px] truncate">
@@ -114,10 +118,14 @@ export default function Header() {
                 {isProfileOpen && (
                   <>
                     <div
-                      className="fixed inset-0 z-40"
+                      className="fixed inset-0"
+                      style={{ zIndex: 9998 }}
                       onClick={() => setIsProfileOpen(false)}
                     />
-                    <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-[var(--border)] py-2 fade-in z-50">
+                    <div
+                      className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 fade-in"
+                      style={{ zIndex: 9999 }}
+                    >
                       <div className="px-4 py-3 border-b border-[var(--border)]">
                         <p className="text-sm font-semibold text-[var(--foreground)]">
                           {profile?.full_name || user.email?.split("@")[0] || "User"}
@@ -212,9 +220,12 @@ export default function Header() {
               </Link>
 
               {user ? (
-                <div className="mx-4 mt-2 p-3 bg-[var(--secondary)] rounded-xl">
+                <div className="mx-4 mt-2 p-3 bg-purple-100 rounded-xl">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-[var(--primary)] flex items-center justify-center text-white font-medium">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' }}
+                    >
                       {user.email?.charAt(0).toUpperCase()}
                     </div>
                     <div>

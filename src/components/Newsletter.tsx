@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Newsletter() {
@@ -9,25 +9,41 @@ export default function Newsletter() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Track mounted state for hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Check localStorage for subscription status
   useEffect(() => {
-    const subscribed = localStorage.getItem("newsletter_subscribed");
-    if (subscribed) {
-      setIsSubscribed(true);
+    if (mounted) {
+      const subscribed = localStorage.getItem("newsletter_subscribed");
+      if (subscribed) {
+        setIsSubscribed(true);
+      }
     }
-  }, []);
+  }, [mounted]);
 
   // Pre-fill email if user is logged in
   useEffect(() => {
-    if (user?.email) {
+    if (mounted && user?.email && !email) {
       setEmail(user.email);
     }
-  }, [user]);
+  }, [user, mounted, email]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!email) return;
+    e.stopPropagation();
+
+    const currentEmail = email.trim();
+
+    if (!currentEmail || !currentEmail.includes("@")) {
+      setStatus("error");
+      setMessage("Please enter a valid email address");
+      return;
+    }
 
     setStatus("loading");
     setMessage("");
@@ -37,7 +53,7 @@ export default function Newsletter() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email,
+          email: currentEmail,
           userId: user?.id || null,
         }),
       });
@@ -49,15 +65,19 @@ export default function Newsletter() {
       }
 
       setStatus("success");
-      setMessage(data.message);
+      setMessage(data.message || "Thank you for subscribing!");
       setIsSubscribed(true);
-      localStorage.setItem("newsletter_subscribed", "true");
-      localStorage.setItem("newsletter_email", email);
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("newsletter_subscribed", "true");
+        localStorage.setItem("newsletter_email", currentEmail);
+      }
     } catch (error) {
+      console.error("Newsletter subscription error:", error);
       setStatus("error");
-      setMessage(error instanceof Error ? error.message : "Something went wrong");
+      setMessage(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     }
-  };
+  }, [email, user?.id]);
 
   // Already subscribed view
   if (isSubscribed) {
@@ -99,20 +119,28 @@ export default function Newsletter() {
             <p className="font-medium">{message}</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+          <form
+            onSubmit={handleSubmit}
+            action="#"
+            method="POST"
+            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+          >
             <input
               type="email"
+              name="email"
+              id="newsletter-email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={user ? user.email || "Enter your email" : "Enter your email"}
-              className="flex-1 px-5 py-4 rounded-full border border-[var(--border)] focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 disabled:bg-gray-50"
+              placeholder="Enter your email"
+              className="flex-1 px-5 py-4 rounded-full border border-gray-200 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 disabled:bg-gray-50"
               required
               disabled={status === "loading"}
+              autoComplete="email"
             />
             <button
               type="submit"
               disabled={status === "loading"}
-              className="px-8 py-4 bg-[var(--primary)] text-white rounded-full font-semibold hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="px-8 py-4 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {status === "loading" ? (
                 <>
