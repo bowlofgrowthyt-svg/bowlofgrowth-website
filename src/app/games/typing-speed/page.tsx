@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 
 const quotes = [
   "The only way to do great work is to love what you do.",
@@ -22,6 +23,8 @@ const quotes = [
 ];
 
 export default function TypingSpeedGame() {
+  const { user, loading, addPoints } = useAuth();
+  const isLoggedIn = !loading && !!user;
   const [quote, setQuote] = useState("");
   const [userInput, setUserInput] = useState("");
   const [gameState, setGameState] = useState<"ready" | "playing" | "finished">("ready");
@@ -30,6 +33,7 @@ export default function TypingSpeedGame() {
   const [wpm, setWpm] = useState(0);
   const [accuracy, setAccuracy] = useState(100);
   const [history, setHistory] = useState<{ wpm: number; accuracy: number }[]>([]);
+  const [pointsEarned, setPointsEarned] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const getRandomQuote = useCallback(() => {
@@ -42,6 +46,7 @@ export default function TypingSpeedGame() {
     setUserInput("");
     setGameState("playing");
     setStartTime(Date.now());
+    setPointsEarned(0);
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [getRandomQuote]);
 
@@ -69,6 +74,21 @@ export default function TypingSpeedGame() {
       calculateResults();
     }
   }, [gameState, calculateResults]);
+
+  // Award points when game finishes
+  useEffect(() => {
+    if (gameState === "finished" && isLoggedIn && wpm > 0) {
+      // Points based on WPM + accuracy bonus
+      const basePoints = Math.floor(wpm / 2);
+      const accuracyBonus = accuracy >= 95 ? 10 : accuracy >= 90 ? 5 : 0;
+      const totalPoints = basePoints + accuracyBonus;
+
+      if (totalPoints > 0) {
+        addPoints("typing-speed", totalPoints, { wpm, accuracy });
+        setPointsEarned(totalPoints);
+      }
+    }
+  }, [gameState, isLoggedIn, wpm, accuracy, addPoints]);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -219,7 +239,7 @@ export default function TypingSpeedGame() {
               {getSpeedRating(wpm).text}
             </h2>
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-[var(--secondary)] rounded-xl p-6">
                 <p className="text-4xl font-bold text-[var(--primary)]">{wpm}</p>
                 <p className="text-sm text-[var(--muted)]">Words Per Minute</p>
@@ -229,6 +249,17 @@ export default function TypingSpeedGame() {
                 <p className="text-sm text-[var(--muted)]">Accuracy</p>
               </div>
             </div>
+
+            {isLoggedIn && pointsEarned > 0 && (
+              <p className="text-sm text-green-600 font-medium mb-4">
+                +{pointsEarned} points earned!
+              </p>
+            )}
+            {!isLoggedIn && !loading && (
+              <p className="text-sm text-amber-600 mb-4">
+                <a href="/auth" className="underline">Sign in</a> to save points!
+              </p>
+            )}
 
             <div className="flex gap-4 justify-center">
               <button

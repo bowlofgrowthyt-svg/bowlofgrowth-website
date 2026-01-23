@@ -312,9 +312,19 @@ export default function Game2048() {
 
           {/* Game Over Overlay */}
           {gameOver && (
-            <div className="absolute inset-0 bg-white/80 rounded-lg flex flex-col items-center justify-center">
-              <p className="text-3xl font-bold text-[#776e65] mb-4">Game Over!</p>
-              <p className="text-lg text-[#776e65] mb-4">Final Score: {score}</p>
+            <div className="absolute inset-0 bg-white/90 rounded-lg flex flex-col items-center justify-center">
+              <p className="text-3xl font-bold text-[#776e65] mb-2">Game Over!</p>
+              <p className="text-lg text-[#776e65] mb-2">Final Score: {score}</p>
+              {isLoggedIn && pointsAwarded && (
+                <p className="text-sm text-green-600 font-medium mb-4">
+                  +{Math.floor(score / 100)} points earned!
+                </p>
+              )}
+              {!isLoggedIn && !loading && (
+                <p className="text-sm text-amber-600 mb-4">
+                  <Link href="/auth" className="underline">Sign in</Link> to save points!
+                </p>
+              )}
               <button
                 onClick={resetGame}
                 className="px-6 py-3 bg-[#8f7a66] text-white rounded-lg font-semibold hover:bg-[#9f8b77] transition-colors"
@@ -327,8 +337,13 @@ export default function Game2048() {
           {/* Won Overlay */}
           {won && !gameOver && (
             <div className="absolute inset-0 bg-[#edc22e]/90 rounded-lg flex flex-col items-center justify-center">
-              <p className="text-3xl font-bold text-white mb-4">You Win! 🎉</p>
-              <p className="text-lg text-white mb-4">Score: {score}</p>
+              <p className="text-3xl font-bold text-white mb-2">You Win! 🎉</p>
+              <p className="text-lg text-white mb-2">Score: {score}</p>
+              {isLoggedIn && pointsAwarded && (
+                <p className="text-sm text-white/90 font-medium mb-4">
+                  +{Math.floor(score / 100) + 100} points earned! (includes 100 bonus)
+                </p>
+              )}
               <div className="flex gap-3">
                 <button
                   onClick={() => setWon(false)}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Metadata } from "next";
+import GamesStats from "@/components/GamesStats";
 
 export const metadata: Metadata = {
   title: "Brain Games",
@@ -18,6 +19,16 @@ const games = [
     available: true,
   },
   {
+    id: "reaction-time",
+    name: "Reaction Time",
+    description: "Test your reflexes! Click as fast as you can when the screen turns green. Earn points per attempt!",
+    icon: "⚡",
+    difficulty: "Easy",
+    color: "#3B82F6",
+    points: 50,
+    available: true,
+  },
+  {
     id: "number-sequence",
     name: "Number Sequence",
     description: "Remember and repeat increasingly longer number sequences to train your working memory.",
@@ -25,7 +36,7 @@ const games = [
     difficulty: "Medium",
     color: "#F59E0B",
     points: 75,
-    available: false,
+    available: true,
   },
   {
     id: "word-scramble",
@@ -35,7 +46,7 @@ const games = [
     difficulty: "Easy",
     color: "#3B82F6",
     points: 40,
-    available: false,
+    available: true,
   },
   {
     id: "focus-trainer",
@@ -45,7 +56,7 @@ const games = [
     difficulty: "Hard",
     color: "#EC4899",
     points: 100,
-    available: false,
+    available: true,
   },
   {
     id: "pattern-recognition",
@@ -55,7 +66,7 @@ const games = [
     difficulty: "Medium",
     color: "#8B5CF6",
     points: 60,
-    available: false,
+    available: true,
   },
   {
     id: "speed-math",
@@ -65,7 +76,7 @@ const games = [
     difficulty: "Hard",
     color: "#EF4444",
     points: 80,
-    available: false,
+    available: true,
   },
   {
     id: "color-match",
@@ -75,16 +86,46 @@ const games = [
     difficulty: "Medium",
     color: "#06B6D4",
     points: 65,
-    available: false,
+    available: true,
   },
   {
-    id: "reaction-time",
-    name: "Reaction Time",
-    description: "Test how fast your reflexes are. Click as soon as the screen changes color!",
-    icon: "⚡",
+    id: "visual-memory",
+    name: "Visual Memory",
+    description: "Remember the positions of squares that flash on the grid. How many can you recall?",
+    icon: "👁️",
+    difficulty: "Hard",
+    color: "#A855F7",
+    points: 90,
+    available: true,
+  },
+  {
+    id: "typing-speed",
+    name: "Typing Speed",
+    description: "Test your typing speed and accuracy with inspiring quotes and passages.",
+    icon: "⌨️",
     difficulty: "Easy",
-    color: "#FBBF24",
-    points: 35,
+    color: "#64748B",
+    points: 45,
+    available: true,
+  },
+  {
+    id: "2048",
+    name: "2048",
+    description: "Slide tiles to combine them and reach the 2048 tile. A strategic puzzle classic!",
+    icon: "🎮",
+    difficulty: "Medium",
+    color: "#F97316",
+    points: 70,
+    available: true,
+  },
+  {
+    id: "breathing-exercise",
+    name: "Mindful Breathing",
+    description: "Guided breathing exercises to reduce stress and improve focus. Calm your mind.",
+    icon: "🧘",
+    difficulty: "Easy",
+    color: "#84CC16",
+    points: 30,
     available: true,
   },
   {
@@ -108,36 +149,6 @@ const games = [
     available: false,
   },
   {
-    id: "visual-memory",
-    name: "Visual Memory",
-    description: "Remember the positions of squares that flash on the grid. How many can you recall?",
-    icon: "👁️",
-    difficulty: "Hard",
-    color: "#A855F7",
-    points: 90,
-    available: false,
-  },
-  {
-    id: "typing-speed",
-    name: "Typing Speed",
-    description: "Test your typing speed and accuracy with inspiring quotes and passages.",
-    icon: "⌨️",
-    difficulty: "Easy",
-    color: "#64748B",
-    points: 45,
-    available: true,
-  },
-  {
-    id: "2048",
-    name: "2048",
-    description: "Slide tiles to combine them and reach the 2048 tile. A strategic puzzle classic!",
-    icon: "🎮",
-    difficulty: "Medium",
-    color: "#F97316",
-    points: 70,
-    available: true,
-  },
-  {
     id: "trivia-quiz",
     name: "Daily Trivia",
     description: "Test your knowledge with daily trivia questions on personal growth and life skills.",
@@ -155,16 +166,6 @@ const games = [
     difficulty: "Hard",
     color: "#0EA5E9",
     points: 110,
-    available: false,
-  },
-  {
-    id: "breathing-exercise",
-    name: "Mindful Breathing",
-    description: "Guided breathing exercises to reduce stress and improve focus. Calm your mind.",
-    icon: "🧘",
-    difficulty: "Easy",
-    color: "#84CC16",
-    points: 30,
     available: false,
   },
 ];
@@ -190,31 +191,8 @@ export default function GamesPage() {
         </div>
       </section>
 
-      {/* Stats (placeholder for logged in users) */}
-      <section className="py-8 bg-white border-b border-[var(--border)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-2xl font-bold text-[var(--primary)]">0</p>
-              <p className="text-sm text-[var(--muted)]">Games Played</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[var(--primary)]">0</p>
-              <p className="text-sm text-[var(--muted)]">Points Earned</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[var(--primary)]">0</p>
-              <p className="text-sm text-[var(--muted)]">Day Streak</p>
-            </div>
-          </div>
-          <p className="text-center text-sm text-[var(--muted)] mt-4">
-            <Link href="/auth" className="text-[var(--primary)] hover:underline">
-              Sign in
-            </Link>{" "}
-            to track your progress and earn points!
-          </p>
-        </div>
-      </section>
+      {/* Stats */}
+      <GamesStats />
 
       {/* Games Grid */}
       <section className="py-12 md:py-16">
