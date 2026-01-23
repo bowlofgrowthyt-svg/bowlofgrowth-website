@@ -85,7 +85,7 @@ const games = [
     difficulty: "Easy",
     color: "#FBBF24",
     points: 35,
-    available: false,
+    available: true,
   },
   {
     id: "sudoku",
@@ -125,7 +125,7 @@ const games = [
     difficulty: "Easy",
     color: "#64748B",
     points: 45,
-    available: false,
+    available: true,
   },
   {
     id: "2048",
@@ -135,7 +135,7 @@ const games = [
     difficulty: "Medium",
     color: "#F97316",
     points: 70,
-    available: false,
+    available: true,
   },
   {
     id: "trivia-quiz",

@@ -37,7 +37,9 @@ export default async function CategoryPage({ params }: Props) {
     notFound();
   }
 
-  const categoryArticles = getArticlesByCategory(slug);
+  const categoryArticles = getArticlesByCategory(slug).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
   return (
     <div className="fade-in">

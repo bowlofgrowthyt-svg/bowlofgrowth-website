@@ -37,7 +37,7 @@ export default function ArticleContent({ content }: ArticleContentProps) {
         p: ({ children }) => (
           <p className="text-[var(--muted)] leading-relaxed mb-4">{children}</p>
         ),
-        // Links
+        // Links - all open in new tab for better UX
         a: ({ href, children }) => {
           const isExternal = href?.startsWith("http");
           if (isExternal) {
@@ -55,10 +55,16 @@ export default function ArticleContent({ content }: ArticleContentProps) {
               </a>
             );
           }
+          // Internal links also open in new tab
           return (
-            <Link href={href || "#"} className="text-[var(--primary)] hover:underline">
+            <a
+              href={href || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--primary)] hover:underline font-medium"
+            >
               {children}
-            </Link>
+            </a>
           );
         },
         // Images with Next.js optimization

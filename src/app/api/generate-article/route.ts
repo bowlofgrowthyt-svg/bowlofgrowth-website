@@ -3,6 +3,28 @@ import { articles } from "@/data/articles";
 
 const CLAUDE_API_URL = "https://api.anthropic.com/v1/messages";
 
+// Simple in-memory rate limiting (for production, use Redis)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 10; // requests per window
+const RATE_WINDOW = 60 * 1000; // 1 minute
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_WINDOW });
+    return true;
+  }
+
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
 interface ArticleRequest {
   topic: string;
   category: string;
@@ -30,14 +52,28 @@ function getRelatedArticles(category: string, topic: string) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a minute." },
+        { status: 429 }
+      );
+    }
+
     const { topic, category }: ArticleRequest = await request.json();
 
+    // Input validation
     if (!topic || !category) {
       return NextResponse.json(
         { error: "Topic and category are required" },
         { status: 400 }
       );
     }
+
+    // Sanitize inputs - limit length to prevent abuse
+    const sanitizedTopic = topic.slice(0, 200).trim();
+    const sanitizedCategory = category.slice(0, 50).trim();
 
     const apiKey = process.env.CLAUDE_API_KEY;
     if (!apiKey) {
@@ -48,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get related articles for internal linking
-    const relatedArticles = getRelatedArticles(category, topic);
+    const relatedArticles = getRelatedArticles(sanitizedCategory, sanitizedTopic);
     const articlesForLinking = relatedArticles
       .map((a) => `- "${a.title}" (link: /articles/${a.slug})`)
       .join("\n");
@@ -117,7 +153,7 @@ Return ONLY valid JSON with this structure:
   "seoKeywords": ["main keyword", "secondary keyword 1", "secondary keyword 2"]
 }`;
 
-    const userPrompt = `Write a comprehensive, SEO-optimized article about "${topic}" for the "${category}" category.
+    const userPrompt = `Write a comprehensive, SEO-optimized article about "${sanitizedTopic}" for the "${sanitizedCategory}" category.
 
 Requirements:
 - 1800-2500 words
@@ -174,8 +210,8 @@ The article should be so good that readers bookmark it and share it with friends
     } catch {
       // If parsing fails, create a basic structure
       articleData = {
-        title: topic,
-        excerpt: `Discover powerful insights about ${topic} and transform your life with actionable strategies.`,
+        title: sanitizedTopic,
+        excerpt: `Discover powerful insights about ${sanitizedTopic} and transform your life with actionable strategies.`,
         content: content,
         readTime: Math.ceil(content.split(" ").length / 200),
         seoKeywords: [topic.toLowerCase()],
@@ -215,8 +251,8 @@ The article should be so good that readers bookmark it and share it with friends
         content: processedContent,
         readTime: articleData.readTime || Math.ceil(processedContent.split(" ").length / 200),
         slug,
-        category,
-        categorySlug: category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        category: sanitizedCategory,
+        categorySlug: sanitizedCategory.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
         author: "Bowl of Growth",
         createdAt: new Date().toISOString().split("T")[0],
         image: `https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800`,
