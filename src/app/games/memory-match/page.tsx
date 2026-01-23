@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 
 const EMOJIS = ["🎯", "🧠", "⭐", "🔥", "💡", "🚀", "💪", "🎨"];
 
@@ -31,6 +32,7 @@ function createCards(): Card[] {
 }
 
 export default function MemoryMatchGame() {
+  const { user, addPoints } = useAuth();
   const [cards, setCards] = useState<Card[]>(createCards());
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
@@ -39,13 +41,27 @@ export default function MemoryMatchGame() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pointsAwarded, setPointsAwarded] = useState(false);
 
   useEffect(() => {
     if (matches === EMOJIS.length && startTime && !endTime) {
-      setEndTime(Date.now());
+      const completionTime = Date.now();
+      setEndTime(completionTime);
       setGameComplete(true);
+
+      // Award points if user is logged in and points not yet awarded
+      if (user && !pointsAwarded) {
+        const timeInSeconds = Math.floor((completionTime - startTime) / 1000);
+        const baseScore = 1000;
+        const timeBonus = Math.max(0, 300 - timeInSeconds);
+        const movesPenalty = moves * 5;
+        const score = Math.max(10, Math.floor((baseScore + timeBonus - movesPenalty) / 10));
+
+        addPoints("memory_match", score, { moves, time: timeInSeconds });
+        setPointsAwarded(true);
+      }
     }
-  }, [matches, startTime, endTime]);
+  }, [matches, startTime, endTime, user, addPoints, pointsAwarded, moves]);
 
   const handleCardClick = (cardId: number) => {
     if (isProcessing) return;
@@ -108,6 +124,7 @@ export default function MemoryMatchGame() {
     setStartTime(null);
     setEndTime(null);
     setIsProcessing(false);
+    setPointsAwarded(false);
   };
 
   const calculateScore = () => {
@@ -178,12 +195,22 @@ export default function MemoryMatchGame() {
             <p className="text-[var(--muted)] mb-6">
               You completed the game in {moves} moves!
             </p>
-            <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-xl p-6 mb-6">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-xl p-6 mb-6">
               <p className="text-sm mb-1">Your Score</p>
               <p className="text-4xl font-bold">{calculateScore()}</p>
               <p className="text-sm mt-2 text-white/80">
                 Time: {endTime && startTime ? formatTime(endTime - startTime) : "N/A"}
               </p>
+              {user && pointsAwarded && (
+                <p className="text-sm mt-2 text-green-300 font-medium">
+                  +{Math.max(10, Math.floor(calculateScore() / 10))} points added to your account!
+                </p>
+              )}
+              {!user && (
+                <p className="text-sm mt-2 text-yellow-300">
+                  <Link href="/auth" className="underline">Sign in</Link> to save your points!
+                </p>
+              )}
             </div>
             <div className="flex gap-4 justify-center">
               <button

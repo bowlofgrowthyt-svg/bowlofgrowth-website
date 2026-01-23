@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 
 type Board = number[][];
 
@@ -23,11 +24,13 @@ const tileColors: Record<number, { bg: string; text: string }> = {
 };
 
 export default function Game2048() {
+  const { user, addPoints } = useAuth();
   const [board, setBoard] = useState<Board>(() => initializeBoard());
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
+  const [pointsAwarded, setPointsAwarded] = useState(false);
 
   function initializeBoard(): Board {
     const newBoard: Board = Array(GRID_SIZE)
@@ -226,11 +229,23 @@ export default function Game2048() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleMove]);
 
+  // Award points when game ends
+  useEffect(() => {
+    if ((gameOver || won) && user && !pointsAwarded && score > 0) {
+      const points = Math.floor(score / 100) + (won ? 100 : 0);
+      if (points > 0) {
+        addPoints("2048", points, { score, won });
+        setPointsAwarded(true);
+      }
+    }
+  }, [gameOver, won, user, pointsAwarded, score, addPoints]);
+
   const resetGame = () => {
     setBoard(initializeBoard());
     setScore(0);
     setGameOver(false);
     setWon(false);
+    setPointsAwarded(false);
   };
 
   const getTileStyle = (value: number) => {

@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 
 type GameState = "waiting" | "ready" | "go" | "result" | "too-early";
 
 export default function ReactionTimeGame() {
+  const { user, addPoints } = useAuth();
   const [gameState, setGameState] = useState<GameState>("waiting");
   const [startTime, setStartTime] = useState(0);
   const [reactionTime, setReactionTime] = useState(0);
   const [attempts, setAttempts] = useState<number[]>([]);
   const [bestTime, setBestTime] = useState<number | null>(null);
+  const [pointsEarned, setPointsEarned] = useState(0);
 
   const startGame = useCallback(() => {
     setGameState("ready");
@@ -40,8 +43,15 @@ export default function ReactionTimeGame() {
         setBestTime(time);
       }
       setGameState("result");
+
+      // Award points based on reaction time (faster = more points)
+      if (user) {
+        const points = time < 200 ? 50 : time < 250 ? 30 : time < 300 ? 20 : time < 350 ? 15 : 10;
+        addPoints("reaction_time", points, { reactionTime: time });
+        setPointsEarned((prev) => prev + points);
+      }
     }
-  }, [gameState, startTime, bestTime, startGame]);
+  }, [gameState, startTime, bestTime, startGame, user, addPoints]);
 
   const getAverageTime = () => {
     if (attempts.length === 0) return 0;
@@ -152,11 +162,21 @@ export default function ReactionTimeGame() {
               <div className="text-6xl mb-4">{getReactionRating(reactionTime).emoji}</div>
               <p className="text-5xl font-bold mb-2">{reactionTime}ms</p>
               <p
-                className="text-xl font-semibold mb-4"
+                className="text-xl font-semibold mb-2"
                 style={{ color: getReactionRating(reactionTime).color }}
               >
                 {getReactionRating(reactionTime).text}
               </p>
+              {user && (
+                <p className="text-green-300 text-sm mb-2">
+                  +{reactionTime < 200 ? 50 : reactionTime < 250 ? 30 : reactionTime < 300 ? 20 : reactionTime < 350 ? 15 : 10} points!
+                </p>
+              )}
+              {!user && (
+                <p className="text-yellow-300 text-sm mb-2">
+                  <Link href="/auth" className="underline">Sign in</Link> to save points!
+                </p>
+              )}
               <p className="text-white/70">Click to try again</p>
             </div>
           )}
@@ -164,18 +184,22 @@ export default function ReactionTimeGame() {
 
         {/* Stats */}
         {attempts.length > 0 && (
-          <div className="mt-8 grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl p-4 text-center border border-[var(--border)]">
-              <p className="text-2xl font-bold text-[var(--primary)]">{attempts.length}</p>
-              <p className="text-sm text-[var(--muted)]">Attempts</p>
+          <div className="mt-8 grid grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl p-4 text-center border border-gray-200">
+              <p className="text-2xl font-bold text-purple-600">{attempts.length}</p>
+              <p className="text-sm text-gray-500">Attempts</p>
             </div>
-            <div className="bg-white rounded-xl p-4 text-center border border-[var(--border)]">
+            <div className="bg-white rounded-xl p-4 text-center border border-gray-200">
               <p className="text-2xl font-bold text-green-600">{bestTime}ms</p>
-              <p className="text-sm text-[var(--muted)]">Best Time</p>
+              <p className="text-sm text-gray-500">Best Time</p>
             </div>
-            <div className="bg-white rounded-xl p-4 text-center border border-[var(--border)]">
-              <p className="text-2xl font-bold text-[var(--foreground)]">{getAverageTime()}ms</p>
-              <p className="text-sm text-[var(--muted)]">Average</p>
+            <div className="bg-white rounded-xl p-4 text-center border border-gray-200">
+              <p className="text-2xl font-bold text-gray-900">{getAverageTime()}ms</p>
+              <p className="text-sm text-gray-500">Average</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 text-center border border-gray-200">
+              <p className="text-2xl font-bold text-amber-500">{pointsEarned}</p>
+              <p className="text-sm text-gray-500">Points Earned</p>
             </div>
           </div>
         )}

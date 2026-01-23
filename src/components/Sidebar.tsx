@@ -5,22 +5,48 @@ import { useState, useEffect } from "react";
 import { getCategoriesWithCounts } from "@/data/categories";
 import { getDailyQuote } from "@/data/quotes";
 import QuoteCard from "./QuoteCard";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Sidebar() {
+  const { user } = useAuth();
   const [sidebarEmail, setSidebarEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [sidebarStatus, setSidebarStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [checkingSubscription, setCheckingSubscription] = useState(false);
 
-  // Check localStorage on mount
+  // Check subscription status on mount and when user changes
   useEffect(() => {
+    // First check localStorage
     const subscribed = localStorage.getItem("newsletter_subscribed");
     if (subscribed === "true") {
       setIsSubscribed(true);
+      return;
     }
-  }, []);
+
+    // If user is logged in, check if their email is subscribed
+    if (user?.email) {
+      setCheckingSubscription(true);
+      fetch("/api/newsletter/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.subscribed) {
+            setIsSubscribed(true);
+            localStorage.setItem("newsletter_subscribed", "true");
+          }
+        })
+        .catch(() => {})
+        .finally(() => setCheckingSubscription(false));
+    }
+  }, [user?.email]);
 
   const handleSidebarSubscribe = async () => {
-    if (!sidebarEmail || !sidebarEmail.includes("@")) {
+    const emailToUse = sidebarEmail || user?.email || "";
+
+    if (!emailToUse || !emailToUse.includes("@")) {
       alert("Please enter a valid email");
       return;
     }
@@ -31,14 +57,14 @@ export default function Sidebar() {
       const response = await fetch("/api/newsletter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: sidebarEmail }),
+        body: JSON.stringify({ email: emailToUse, userId: user?.id }),
       });
 
       if (response.ok) {
         setSidebarStatus("success");
         setIsSubscribed(true);
         localStorage.setItem("newsletter_subscribed", "true");
-        localStorage.setItem("newsletter_email", sidebarEmail);
+        localStorage.setItem("newsletter_email", emailToUse);
       } else {
         setSidebarStatus("error");
       }
@@ -100,7 +126,12 @@ export default function Sidebar() {
       {/* Newsletter */}
       <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-white">
         <h3 className="text-lg font-bold mb-2">Get Daily Wisdom</h3>
-        {isSubscribed || sidebarStatus === "success" ? (
+        {checkingSubscription ? (
+          <div className="text-center py-4">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm text-white/70 mt-2">Checking...</p>
+          </div>
+        ) : isSubscribed || sidebarStatus === "success" ? (
           <div className="text-center py-2">
             <span className="text-3xl">✅</span>
             <p className="font-medium mt-2">You&apos;re Subscribed!</p>
@@ -116,13 +147,13 @@ export default function Sidebar() {
         ) : (
           <>
             <p className="text-white/80 text-sm mb-4">
-              Join readers receiving daily inspiration in their inbox.
+              {user ? "Subscribe to get daily inspiration!" : "Join readers receiving daily inspiration in their inbox."}
             </p>
             <div className="space-y-3">
               <input
                 type="email"
-                placeholder="Your email address"
-                value={sidebarEmail}
+                placeholder={user?.email || "Your email address"}
+                value={sidebarEmail || user?.email || ""}
                 onChange={(e) => setSidebarEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 text-sm focus:outline-none focus:border-white/50"
               />
