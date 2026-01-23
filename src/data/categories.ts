@@ -1,4 +1,10 @@
 import { Category } from "@/types";
+import { articles } from "./articles";
+
+// Calculate actual article count for each category
+function getArticleCount(categorySlug: string): number {
+  return articles.filter((a) => a.categorySlug === categorySlug).length;
+}
 
 export const categories: Category[] = [
   {
@@ -7,7 +13,6 @@ export const categories: Category[] = [
     description: "Develop your mindset, build confidence, and become the best version of yourself.",
     icon: "growth",
     color: "#7C3AED",
-    articleCount: 24,
   },
   {
     name: "Productivity",
@@ -15,7 +20,6 @@ export const categories: Category[] = [
     description: "Master time management, eliminate distractions, and accomplish more every day.",
     icon: "productivity",
     color: "#10B981",
-    articleCount: 18,
   },
   {
     name: "Emotional Intelligence",
@@ -23,7 +27,6 @@ export const categories: Category[] = [
     description: "Understand emotions, build better relationships, and navigate life with empathy.",
     icon: "emotional",
     color: "#F59E0B",
-    articleCount: 15,
   },
   {
     name: "Book Summaries",
@@ -31,7 +34,6 @@ export const categories: Category[] = [
     description: "Key insights from the world's best self-improvement and business books.",
     icon: "book",
     color: "#3B82F6",
-    articleCount: 32,
   },
   {
     name: "Success Stories",
@@ -39,7 +41,6 @@ export const categories: Category[] = [
     description: "Inspiring real-life stories of people who transformed their lives.",
     icon: "success",
     color: "#EC4899",
-    articleCount: 12,
   },
   {
     name: "Career & Finance",
@@ -47,6 +48,13 @@ export const categories: Category[] = [
     description: "Grow professionally, manage money wisely, and build financial freedom.",
     icon: "career",
     color: "#8B5CF6",
-    articleCount: 20,
   },
 ];
+
+// Get categories with real-time article counts
+export function getCategoriesWithCounts(): (Category & { articleCount: number })[] {
+  return categories.map((cat) => ({
+    ...cat,
+    articleCount: getArticleCount(cat.slug),
+  }));
+}

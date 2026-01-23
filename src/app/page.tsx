@@ -2,13 +2,14 @@ import ArticleCard from "@/components/ArticleCard";
 import CategoryCard from "@/components/CategoryCard";
 import ParallaxHero from "@/components/ParallaxHero";
 import Sidebar from "@/components/Sidebar";
-import { categories } from "@/data/categories";
+import { getCategoriesWithCounts } from "@/data/categories";
 import { getFeaturedArticle, getRecentArticles } from "@/data/articles";
 import Link from "next/link";
 
 export default function Home() {
   const featuredArticle = getFeaturedArticle();
   const recentArticles = getRecentArticles(9);
+  const categoriesWithCounts = getCategoriesWithCounts();
 
   return (
     <div>
@@ -130,7 +131,7 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category) => (
+            {categoriesWithCounts.map((category) => (
               <CategoryCard key={category.slug} category={category} />
             ))}
           </div>
