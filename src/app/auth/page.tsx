@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,9 +14,37 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const router = useRouter();
-  const { user, loading, configured, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
+  const { user, loading, configured, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut } = useAuth();
+
+  // Force logout function that clears everything
+  const handleForceLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      // Clear Supabase session
+      const supabase = createClient();
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+      // Also call our signOut
+      await signOut();
+      // Clear all localStorage
+      localStorage.clear();
+      // Clear all sessionStorage
+      sessionStorage.clear();
+      // Show success
+      setMessage("Logged out successfully! You can now sign in again.");
+      setError("");
+      // Reload the page to reset all state
+      window.location.reload();
+    } catch (err) {
+      console.error("Logout error:", err);
+      // Force reload anyway
+      window.location.reload();
+    }
+  };
 
   // Redirect if already logged in
   useEffect(() => {
@@ -125,17 +154,28 @@ export default function AuthPage() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
+        {/* Logout Button - Always visible */}
+        <div className="text-center mb-4">
+          <button
+            onClick={handleForceLogout}
+            disabled={isLoggingOut}
+            className="text-sm text-red-500 hover:text-red-700 underline disabled:opacity-50"
+          >
+            {isLoggingOut ? "Logging out..." : "Having issues? Click here to logout & clear cache"}
+          </button>
+        </div>
+
         {/* Logo & Title */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center">
               <span className="text-white font-bold text-xl">B</span>
             </div>
           </Link>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">
+          <h1 className="text-2xl font-bold text-gray-900">
             {isLogin ? "Welcome Back!" : "Join Bowl of Growth"}
           </h1>
-          <p className="text-[var(--muted)] mt-2">
+          <p className="text-gray-600 mt-2">
             {isLogin
               ? "Sign in to track your progress and earn points"
               : "Create an account to start your growth journey"}
