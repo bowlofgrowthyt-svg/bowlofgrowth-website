@@ -139,15 +139,13 @@ export default function Header() {
                         <p className="text-sm font-semibold text-[var(--foreground)]">
                           {profile?.full_name || user.email?.split("@")[0] || "User"}
                         </p>
-                        <p className="text-xs text-[var(--muted)] truncate">{user.email}</p>
-                        {profile?.points !== undefined && (
-                          <div className="flex items-center gap-1 mt-2">
-                            <span className="text-lg">🏆</span>
-                            <span className="text-sm font-medium text-[var(--primary)]">
-                              {profile.points} points
-                            </span>
-                          </div>
-                        )}
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        <div className="flex items-center gap-1 mt-2 bg-purple-50 rounded-lg px-2 py-1">
+                          <span className="text-lg">🏆</span>
+                          <span className="text-sm font-bold text-purple-600">
+                            {profile?.points ?? 0} points
+                          </span>
+                        </div>
                       </div>
                       <Link
                         href="/games"

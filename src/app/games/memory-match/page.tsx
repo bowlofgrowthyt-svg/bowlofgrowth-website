@@ -32,7 +32,8 @@ function createCards(): Card[] {
 }
 
 export default function MemoryMatchGame() {
-  const { user, addPoints } = useAuth();
+  const { user, loading, addPoints } = useAuth();
+  const isLoggedIn = !loading && !!user;
   const [cards, setCards] = useState<Card[]>(createCards());
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
@@ -50,7 +51,7 @@ export default function MemoryMatchGame() {
       setGameComplete(true);
 
       // Award points if user is logged in and points not yet awarded
-      if (user && !pointsAwarded) {
+      if (isLoggedIn && !pointsAwarded) {
         const timeInSeconds = Math.floor((completionTime - startTime) / 1000);
         const baseScore = 1000;
         const timeBonus = Math.max(0, 300 - timeInSeconds);
@@ -61,7 +62,7 @@ export default function MemoryMatchGame() {
         setPointsAwarded(true);
       }
     }
-  }, [matches, startTime, endTime, user, addPoints, pointsAwarded, moves]);
+  }, [matches, startTime, endTime, isLoggedIn, addPoints, pointsAwarded, moves]);
 
   const handleCardClick = (cardId: number) => {
     if (isProcessing) return;
@@ -201,12 +202,12 @@ export default function MemoryMatchGame() {
               <p className="text-sm mt-2 text-white/80">
                 Time: {endTime && startTime ? formatTime(endTime - startTime) : "N/A"}
               </p>
-              {user && pointsAwarded && (
+              {isLoggedIn && pointsAwarded && (
                 <p className="text-sm mt-2 text-green-300 font-medium">
                   +{Math.max(10, Math.floor(calculateScore() / 10))} points added to your account!
                 </p>
               )}
-              {!user && (
+              {!isLoggedIn && !loading && (
                 <p className="text-sm mt-2 text-yellow-300">
                   <Link href="/auth" className="underline">Sign in</Link> to save your points!
                 </p>

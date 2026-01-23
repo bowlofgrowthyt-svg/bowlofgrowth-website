@@ -7,13 +7,16 @@ import { useAuth } from "@/hooks/useAuth";
 type GameState = "waiting" | "ready" | "go" | "result" | "too-early";
 
 export default function ReactionTimeGame() {
-  const { user, addPoints } = useAuth();
+  const { user, loading, addPoints } = useAuth();
   const [gameState, setGameState] = useState<GameState>("waiting");
   const [startTime, setStartTime] = useState(0);
   const [reactionTime, setReactionTime] = useState(0);
   const [attempts, setAttempts] = useState<number[]>([]);
   const [bestTime, setBestTime] = useState<number | null>(null);
   const [pointsEarned, setPointsEarned] = useState(0);
+
+  // Track if user is logged in (wait for auth to load)
+  const isLoggedIn = !loading && !!user;
 
   const startGame = useCallback(() => {
     setGameState("ready");
@@ -45,13 +48,13 @@ export default function ReactionTimeGame() {
       setGameState("result");
 
       // Award points based on reaction time (faster = more points)
-      if (user) {
+      if (isLoggedIn) {
         const points = time < 200 ? 50 : time < 250 ? 30 : time < 300 ? 20 : time < 350 ? 15 : 10;
         addPoints("reaction_time", points, { reactionTime: time });
         setPointsEarned((prev) => prev + points);
       }
     }
-  }, [gameState, startTime, bestTime, startGame, user, addPoints]);
+  }, [gameState, startTime, bestTime, startGame, isLoggedIn, addPoints]);
 
   const getAverageTime = () => {
     if (attempts.length === 0) return 0;
@@ -167,12 +170,12 @@ export default function ReactionTimeGame() {
               >
                 {getReactionRating(reactionTime).text}
               </p>
-              {user && (
+              {isLoggedIn && (
                 <p className="text-green-300 text-sm mb-2">
                   +{reactionTime < 200 ? 50 : reactionTime < 250 ? 30 : reactionTime < 300 ? 20 : reactionTime < 350 ? 15 : 10} points!
                 </p>
               )}
-              {!user && (
+              {!isLoggedIn && !loading && (
                 <p className="text-yellow-300 text-sm mb-2">
                   <Link href="/auth" className="underline">Sign in</Link> to save points!
                 </p>

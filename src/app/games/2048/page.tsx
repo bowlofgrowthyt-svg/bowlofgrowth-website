@@ -24,7 +24,8 @@ const tileColors: Record<number, { bg: string; text: string }> = {
 };
 
 export default function Game2048() {
-  const { user, addPoints } = useAuth();
+  const { user, loading, addPoints } = useAuth();
+  const isLoggedIn = !loading && !!user;
   const [board, setBoard] = useState<Board>(() => initializeBoard());
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
@@ -231,14 +232,14 @@ export default function Game2048() {
 
   // Award points when game ends
   useEffect(() => {
-    if ((gameOver || won) && user && !pointsAwarded && score > 0) {
+    if ((gameOver || won) && isLoggedIn && !pointsAwarded && score > 0) {
       const points = Math.floor(score / 100) + (won ? 100 : 0);
       if (points > 0) {
         addPoints("2048", points, { score, won });
         setPointsAwarded(true);
       }
     }
-  }, [gameOver, won, user, pointsAwarded, score, addPoints]);
+  }, [gameOver, won, isLoggedIn, pointsAwarded, score, addPoints]);
 
   const resetGame = () => {
     setBoard(initializeBoard());
