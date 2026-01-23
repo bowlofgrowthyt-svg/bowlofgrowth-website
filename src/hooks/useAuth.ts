@@ -160,7 +160,7 @@ export function useAuth() {
     }
 
     try {
-      // First try the RPC function
+      // Use secure RPC function - this prevents cheating
       const { data, error } = await supabase.rpc("add_points", {
         user_uuid: user.id,
         activity: activityType,
@@ -169,26 +169,9 @@ export function useAuth() {
       });
 
       if (error) {
-        console.error("RPC add_points failed, using direct update:", error);
-        // Fallback: directly update the profile points
-        const currentPoints = profile?.points || 0;
-        const newPoints = currentPoints + points;
-
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({ points: newPoints, updated_at: new Date().toISOString() })
-          .eq("id", user.id);
-
-        if (updateError) {
-          console.error("Direct update also failed:", updateError);
-          return { data: null, error: updateError };
-        }
-
-        // Update local state
-        if (profile) {
-          setProfile({ ...profile, points: newPoints });
-        }
-        return { data: newPoints, error: null };
+        console.error("add_points RPC failed:", error);
+        console.error("Make sure the add_points function exists in Supabase SQL Editor");
+        return { data: null, error };
       }
 
       // Update local state after successful RPC
