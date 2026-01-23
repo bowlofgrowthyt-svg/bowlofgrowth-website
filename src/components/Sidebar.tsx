@@ -1,14 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getCategoriesWithCounts } from "@/data/categories";
 import { getDailyQuote } from "@/data/quotes";
 import QuoteCard from "./QuoteCard";
 
 export default function Sidebar() {
   const [sidebarEmail, setSidebarEmail] = useState("");
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [sidebarStatus, setSidebarStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  // Check localStorage on mount
+  useEffect(() => {
+    const subscribed = localStorage.getItem("newsletter_subscribed");
+    if (subscribed === "true") {
+      setIsSubscribed(true);
+    }
+  }, []);
 
   const handleSidebarSubscribe = async () => {
     if (!sidebarEmail || !sidebarEmail.includes("@")) {
@@ -27,13 +36,23 @@ export default function Sidebar() {
 
       if (response.ok) {
         setSidebarStatus("success");
+        setIsSubscribed(true);
         localStorage.setItem("newsletter_subscribed", "true");
+        localStorage.setItem("newsletter_email", sidebarEmail);
       } else {
         setSidebarStatus("error");
       }
     } catch {
       setSidebarStatus("error");
     }
+  };
+
+  const handleUnsubscribe = () => {
+    localStorage.removeItem("newsletter_subscribed");
+    localStorage.removeItem("newsletter_email");
+    setIsSubscribed(false);
+    setSidebarStatus("idle");
+    setSidebarEmail("");
   };
   const quote = getDailyQuote();
   const categoriesWithCounts = getCategoriesWithCounts();
@@ -81,36 +100,46 @@ export default function Sidebar() {
       {/* Newsletter */}
       <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-white">
         <h3 className="text-lg font-bold mb-2">Get Daily Wisdom</h3>
-        <p className="text-white/80 text-sm mb-4">
-          Join readers receiving daily inspiration in their inbox.
-        </p>
-        {sidebarStatus === "success" ? (
-          <div className="text-center py-4">
-            <span className="text-2xl">✅</span>
-            <p className="font-medium mt-2">Subscribed!</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <input
-              type="email"
-              placeholder="Your email address"
-              value={sidebarEmail}
-              onChange={(e) => setSidebarEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 text-sm focus:outline-none focus:border-white/50"
-            />
+        {isSubscribed || sidebarStatus === "success" ? (
+          <div className="text-center py-2">
+            <span className="text-3xl">✅</span>
+            <p className="font-medium mt-2">You&apos;re Subscribed!</p>
+            <p className="text-white/70 text-sm mt-1">Thanks for joining our community.</p>
             <button
               type="button"
-              onClick={handleSidebarSubscribe}
-              disabled={sidebarStatus === "loading"}
-              className="w-full py-3 bg-white text-purple-600 rounded-xl font-semibold text-sm hover:bg-purple-50 transition-colors disabled:opacity-50"
+              onClick={handleUnsubscribe}
+              className="mt-4 text-xs text-white/60 hover:text-white underline"
             >
-              {sidebarStatus === "loading" ? "Subscribing..." : "Subscribe Free"}
+              Unsubscribe
             </button>
           </div>
+        ) : (
+          <>
+            <p className="text-white/80 text-sm mb-4">
+              Join readers receiving daily inspiration in their inbox.
+            </p>
+            <div className="space-y-3">
+              <input
+                type="email"
+                placeholder="Your email address"
+                value={sidebarEmail}
+                onChange={(e) => setSidebarEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 text-sm focus:outline-none focus:border-white/50"
+              />
+              <button
+                type="button"
+                onClick={handleSidebarSubscribe}
+                disabled={sidebarStatus === "loading"}
+                className="w-full py-3 bg-white text-purple-600 rounded-xl font-semibold text-sm hover:bg-purple-50 transition-colors disabled:opacity-50"
+              >
+                {sidebarStatus === "loading" ? "Subscribing..." : "Subscribe Free"}
+              </button>
+            </div>
+            <p className="text-xs text-white/60 mt-3 text-center">
+              No spam, ever. Unsubscribe anytime.
+            </p>
+          </>
         )}
-        <p className="text-xs text-white/60 mt-3 text-center">
-          No spam, ever. Unsubscribe anytime.
-        </p>
       </div>
 
       {/* Brain Games CTA */}

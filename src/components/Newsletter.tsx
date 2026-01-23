@@ -86,6 +86,14 @@ export default function Newsletter() {
     doSubscribe();
   };
 
+  const handleUnsubscribe = () => {
+    localStorage.removeItem("newsletter_subscribed");
+    localStorage.removeItem("newsletter_email");
+    setIsSubscribed(false);
+    setStatus("idle");
+    setEmail("");
+  };
+
   // Already subscribed view
   if (isSubscribed) {
     return (
@@ -96,12 +104,19 @@ export default function Newsletter() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
-            You're Subscribed! 🎉
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            You&apos;re Subscribed!
           </h2>
-          <p className="text-[var(--muted)]">
+          <p className="text-gray-600 mb-4">
             Thank you for joining our community. Watch your inbox for daily wisdom and inspiration.
           </p>
+          <button
+            type="button"
+            onClick={handleUnsubscribe}
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
+          >
+            Unsubscribe
+          </button>
         </div>
       </section>
     );
