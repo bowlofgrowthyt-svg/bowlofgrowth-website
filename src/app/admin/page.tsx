@@ -63,38 +63,103 @@ const suggestedTopics: Record<string, string[]> = {
   ],
 };
 
-const categoryImages: Record<string, string[]> = {
+// Generate Unsplash image URL based on topic keywords
+function getTopicImage(topic: string, category: string): string {
+  // Extract key words from topic for image search
+  const searchTerms = topic
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .split(" ")
+    .filter((word) => word.length > 3 && !["how", "the", "and", "for", "with", "your", "that", "from", "what", "this", "complete", "guide", "summary", "key", "takeaways", "lessons", "insights"].includes(word))
+    .slice(0, 3)
+    .join(",");
+
+  const categoryKeywords: Record<string, string> = {
+    "Personal Growth": "growth,mindset,motivation",
+    "Productivity": "productivity,workspace,focus",
+    "Emotional Intelligence": "meditation,calm,mindfulness",
+    "Book Summaries": "books,reading,library",
+    "Success Stories": "success,achievement,celebration",
+    "Career & Finance": "business,finance,career",
+  };
+
+  const fallback = categoryKeywords[category] || "inspiration,growth";
+  const query = searchTerms || fallback;
+
+  // Use different random seed for each topic to get different images
+  const seed = topic.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
+  return `https://images.unsplash.com/photo-${1500000000000 + (seed % 100000000)}?w=800&q=80&fit=crop`;
+}
+
+// Better approach: curated images per category with rotation
+const categoryImageSets: Record<string, string[]> = {
   "Personal Growth": [
     "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800",
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800",
+    "https://images.unsplash.com/photo-1493836512294-502baa1986e2?w=800",
     "https://images.unsplash.com/photo-1519834785169-98be25ec3f84?w=800",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800",
+    "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=800",
+    "https://images.unsplash.com/photo-1501139083538-0139583c060f?w=800",
   ],
   "Productivity": [
     "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800",
     "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800",
     "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800",
+    "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800",
+    "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800",
+    "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=800",
   ],
   "Emotional Intelligence": [
     "https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=800",
     "https://images.unsplash.com/photo-1516302752625-fcc3c50ae61f?w=800",
     "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800",
+    "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800",
+    "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800",
+    "https://images.unsplash.com/photo-1474418397713-7ede21d49118?w=800",
   ],
   "Book Summaries": [
     "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800",
     "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=800",
     "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=800",
+    "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800",
+    "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800",
+    "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800",
   ],
   "Success Stories": [
     "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800",
     "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800",
     "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800",
+    "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800",
+    "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800",
+    "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800",
   ],
   "Career & Finance": [
     "https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=800",
     "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800",
     "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800",
+    "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800",
+    "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800",
+    "https://images.unsplash.com/photo-1591696205602-2f950c417cb9?w=800",
   ],
 };
+
+// Track used images to avoid duplicates
+let usedImageIndices: Record<string, number> = {};
+
+function getUniqueImage(category: string): string {
+  const images = categoryImageSets[category] || categoryImageSets["Personal Growth"];
+  const currentIndex = usedImageIndices[category] || 0;
+  const image = images[currentIndex % images.length];
+  usedImageIndices[category] = currentIndex + 1;
+  return image;
+}
+
+interface BatchTopic {
+  topic: string;
+  category: string;
+  categorySlug: string;
+}
 
 interface GeneratedArticle {
   id: string;
@@ -118,12 +183,11 @@ export default function AdminPage() {
   const [generatedArticles, setGeneratedArticles] = useState<GeneratedArticle[]>([]);
   const [error, setError] = useState("");
   const [currentGenerating, setCurrentGenerating] = useState("");
-  const [batchTopics, setBatchTopics] = useState<string[]>([]);
+  const [batchTopics, setBatchTopics] = useState<BatchTopic[]>([]);
   const [batchMode, setBatchMode] = useState(false);
 
-  const getRandomImage = (cat: string) => {
-    const images = categoryImages[cat] || categoryImages["Personal Growth"];
-    return images[Math.floor(Math.random() * images.length)];
+  const getCategorySlug = (catName: string) => {
+    return categories.find((c) => c.name === catName)?.slug || "personal-growth";
   };
 
   const handleGenerate = async (topicToGenerate: string, cat: string) => {
@@ -145,8 +209,10 @@ export default function AdminPage() {
 
       const article: GeneratedArticle = {
         ...data.article,
-        id: String(Date.now()),
-        image: getRandomImage(cat),
+        id: String(Date.now() + Math.random()),
+        image: getUniqueImage(cat),
+        category: cat,
+        categorySlug: getCategorySlug(cat),
         featured: generatedArticles.length === 0,
       };
 
@@ -175,9 +241,11 @@ export default function AdminPage() {
       return;
     }
     setIsGenerating(true);
+    // Reset image indices for fresh batch
+    usedImageIndices = {};
 
-    for (const t of batchTopics) {
-      await handleGenerate(t, category);
+    for (const item of batchTopics) {
+      await handleGenerate(item.topic, item.category);
       // Small delay between requests
       await new Promise((r) => setTimeout(r, 1000));
     }
@@ -188,13 +256,16 @@ export default function AdminPage() {
   };
 
   const addToBatch = (t: string) => {
-    if (!batchTopics.includes(t)) {
-      setBatchTopics([...batchTopics, t]);
+    if (!batchTopics.find((item) => item.topic === t)) {
+      setBatchTopics([
+        ...batchTopics,
+        { topic: t, category: category, categorySlug: getCategorySlug(category) },
+      ]);
     }
   };
 
   const removeFromBatch = (t: string) => {
-    setBatchTopics(batchTopics.filter((topic) => topic !== t));
+    setBatchTopics(batchTopics.filter((item) => item.topic !== t));
   };
 
   const copyAllArticlesJSON = () => {
@@ -205,7 +276,7 @@ export default function AdminPage() {
     title: "${a.title.replace(/"/g, '\\"')}",
     slug: "${a.slug}",
     excerpt: "${a.excerpt.replace(/"/g, '\\"')}",
-    content: \`${a.content.replace(/`/g, "\\`")}\`,
+    content: \`${a.content.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`,
     category: "${a.category}",
     categorySlug: "${a.categorySlug}",
     image: "${a.image}",
@@ -217,9 +288,8 @@ export default function AdminPage() {
       )
       .join(",\n");
 
-    const fullCode = `// Add these to src/data/articles.ts inside the articles array:\n\n${articlesCode}`;
-    navigator.clipboard.writeText(fullCode);
-    alert(`${generatedArticles.length} articles copied! Paste into src/data/articles.ts`);
+    navigator.clipboard.writeText(articlesCode);
+    alert(`${generatedArticles.length} articles copied! Share with Claude to add to your site.`);
   };
 
   return (
@@ -270,7 +340,7 @@ export default function AdminPage() {
             {/* Category Selection */}
             <div className="bg-white rounded-2xl shadow-sm border border-[var(--border)] p-6">
               <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Category
+                Category {batchMode && <span className="text-[var(--muted)] font-normal">(for topics you add)</span>}
               </label>
               <select
                 value={category}
@@ -327,14 +397,17 @@ export default function AdminPage() {
 
                 {batchTopics.length > 0 ? (
                   <ul className="space-y-2 mb-4 max-h-48 overflow-y-auto">
-                    {batchTopics.map((t, i) => (
+                    {batchTopics.map((item, i) => (
                       <li
                         key={i}
                         className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg text-sm"
                       >
-                        <span className="truncate">{t}</span>
+                        <div className="flex-1 min-w-0">
+                          <span className="truncate block">{item.topic}</span>
+                          <span className="text-xs text-[var(--primary)]">{item.category}</span>
+                        </div>
                         <button
-                          onClick={() => removeFromBatch(t)}
+                          onClick={() => removeFromBatch(item.topic)}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -346,7 +419,7 @@ export default function AdminPage() {
                   </ul>
                 ) : (
                   <p className="text-sm text-[var(--muted)] mb-4">
-                    Add topics from suggestions below or type custom topics
+                    Select a category above, then add topics. Change category to add topics from different categories.
                   </p>
                 )}
 
@@ -383,7 +456,7 @@ export default function AdminPage() {
                   className="w-full py-3 bg-[var(--primary)] text-white rounded-xl font-medium hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50"
                 >
                   {isGenerating
-                    ? `Generating (${generatedArticles.length}/${batchTopics.length + generatedArticles.length})...`
+                    ? `Generating: ${currentGenerating.slice(0, 25)}...`
                     : `Generate ${batchTopics.length} Articles`}
                 </button>
               </div>
@@ -399,13 +472,13 @@ export default function AdminPage() {
                   <button
                     key={i}
                     onClick={() => (batchMode ? addToBatch(t) : setTopic(t))}
-                    disabled={batchTopics.includes(t)}
+                    disabled={batchTopics.some((item) => item.topic === t)}
                     className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-[var(--secondary)] text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between"
                   >
                     <span>{t}</span>
                     {batchMode && (
                       <span className="text-[var(--primary)]">
-                        {batchTopics.includes(t) ? "Added" : "+ Add"}
+                        {batchTopics.some((item) => item.topic === t) ? "Added" : "+ Add"}
                       </span>
                     )}
                   </button>
@@ -430,7 +503,7 @@ export default function AdminPage() {
                     onClick={copyAllArticlesJSON}
                     className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-dark)] transition-colors"
                   >
-                    Copy All for Code
+                    Copy All
                   </button>
                 )}
               </div>
@@ -447,7 +520,7 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                  {generatedArticles.map((article, i) => (
+                  {generatedArticles.map((article) => (
                     <div
                       key={article.id}
                       className="border border-[var(--border)] rounded-xl p-4"
@@ -473,7 +546,7 @@ export default function AdminPage() {
                             {article.title}
                           </h4>
                           <p className="text-xs text-[var(--muted)] mt-1">
-                            {article.readTime} min read • {article.createdAt}
+                            {article.readTime} min read
                           </p>
                         </div>
                       </div>
@@ -497,10 +570,9 @@ export default function AdminPage() {
               <div className="mt-4 p-4 bg-green-50 rounded-xl">
                 <h4 className="font-medium text-green-800 mb-2">Next Steps:</h4>
                 <ol className="text-sm text-green-700 space-y-1 list-decimal list-inside">
-                  <li>Click &quot;Copy All for Code&quot; button above</li>
-                  <li>Open <code className="bg-green-100 px-1 rounded">src/data/articles.ts</code></li>
-                  <li>Paste the articles inside the <code className="bg-green-100 px-1 rounded">articles</code> array</li>
-                  <li>Save and your articles will appear on the site!</li>
+                  <li>Click &quot;Copy All&quot; button above</li>
+                  <li>Paste the copied code in this chat</li>
+                  <li>Claude will add it to your site automatically!</li>
                 </ol>
               </div>
             )}

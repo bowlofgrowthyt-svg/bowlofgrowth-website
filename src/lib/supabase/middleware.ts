@@ -9,8 +9,13 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  // Skip if Supabase is not configured
-  if (!supabaseUrl || !supabaseAnonKey) {
+  // Skip if Supabase is not configured or has placeholder values
+  if (
+    !supabaseUrl ||
+    !supabaseAnonKey ||
+    !supabaseUrl.startsWith("http") ||
+    supabaseUrl.includes("your_supabase")
+  ) {
     return supabaseResponse;
   }
 
