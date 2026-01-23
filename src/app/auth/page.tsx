@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { createClient } from "@/lib/supabase/client";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,31 +18,23 @@ export default function AuthPage() {
   const router = useRouter();
   const { user, loading, configured, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut } = useAuth();
 
-  // Force logout function that clears everything
-  const handleForceLogout = async () => {
+  // Force logout function that clears everything - no async, just clear and reload
+  const handleForceLogout = () => {
     setIsLoggingOut(true);
-    try {
-      // Clear Supabase session
-      const supabase = createClient();
-      if (supabase) {
-        await supabase.auth.signOut();
-      }
-      // Also call our signOut
-      await signOut();
-      // Clear all localStorage
-      localStorage.clear();
-      // Clear all sessionStorage
-      sessionStorage.clear();
-      // Show success
-      setMessage("Logged out successfully! You can now sign in again.");
-      setError("");
-      // Reload the page to reset all state
-      window.location.reload();
-    } catch (err) {
-      console.error("Logout error:", err);
-      // Force reload anyway
-      window.location.reload();
-    }
+
+    // Clear all storage immediately
+    try { localStorage.clear(); } catch {}
+    try { sessionStorage.clear(); } catch {}
+
+    // Clear all cookies
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+
+    // Force hard reload after a brief delay
+    setTimeout(() => {
+      window.location.href = "/auth";
+    }, 100);
   };
 
   // Redirect if already logged in

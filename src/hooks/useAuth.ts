@@ -25,6 +25,11 @@ export function useAuth() {
       return;
     }
 
+    // Timeout to prevent infinite loading - set loading to false after 5 seconds no matter what
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
     // Get initial session
     const getSession = async () => {
       try {
@@ -36,6 +41,7 @@ export function useAuth() {
         if (userError) {
           console.error("Auth getUser error:", userError);
           setLoading(false);
+          clearTimeout(timeout);
           return;
         }
 
@@ -57,6 +63,7 @@ export function useAuth() {
         console.error("Session error:", error);
       } finally {
         setLoading(false);
+        clearTimeout(timeout);
       }
     };
 
