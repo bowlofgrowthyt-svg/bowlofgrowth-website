@@ -143,10 +143,21 @@ export default function AuthPage() {
     }
   };
 
+  // Always show logout option even while loading
   if (loading) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full" />
+      <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-6" />
+          <p className="text-gray-600 mb-4">Loading...</p>
+          <button
+            onClick={handleForceLogout}
+            disabled={isLoggingOut}
+            className="text-sm text-red-500 hover:text-red-700 underline disabled:opacity-50"
+          >
+            {isLoggingOut ? "Logging out..." : "Stuck? Click here to logout & clear cache"}
+          </button>
+        </div>
       </div>
     );
   }
