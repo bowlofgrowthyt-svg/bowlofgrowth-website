@@ -150,9 +150,16 @@ export default function Header() {
                       <Link
                         href="/games"
                         onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--muted)] hover:text-[var(--primary)] hover:bg-[var(--secondary)] transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors"
                       >
                         <span>🎮</span> Play Games
+                      </Link>
+                      <Link
+                        href="/leaderboard"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors"
+                      >
+                        <span>🏆</span> Leaderboard
                       </Link>
                       <button
                         onClick={handleSignOut}
