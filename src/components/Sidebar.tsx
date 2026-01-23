@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { getCategoriesWithCounts } from "@/data/categories";
 import { getDailyQuote } from "@/data/quotes";
 import QuoteCard from "./QuoteCard";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Sidebar() {
   const { user } = useAuth();
