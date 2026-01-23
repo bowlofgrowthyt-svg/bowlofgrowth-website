@@ -2,6 +2,138 @@ import { Article } from "@/types";
 
 export const articles: Article[] = [
   {
+    id: "7",
+    title: "10 Morning Habits of Highly Successful People",
+    slug: "morning-habits-successful-people",
+    excerpt: "Discover the powerful morning routines used by CEOs, athletes, and entrepreneurs to maximize their potential every day.",
+    content: `
+Morning routines set the tone for your entire day. The most successful people in the world don't leave their mornings to chance—they design them intentionally.
+
+## Why Mornings Matter
+
+> "The first hour of the morning is the rudder of the day." — Henry Ward Beecher
+
+Research from the [Harvard Business Review](https://hbr.org) shows that people who wake up early are more proactive and better at anticipating problems. Let's explore what successful people actually do.
+
+## The 10 Habits
+
+### 1. Wake Up Early (5-6 AM)
+
+![Sunrise over mountains](https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=800)
+
+Most successful CEOs wake up before 6 AM. This gives them quiet time before the world starts demanding their attention.
+
+**Examples:**
+- Tim Cook (Apple CEO): 3:45 AM
+- Dwayne Johnson: 4:00 AM
+- Oprah Winfrey: 6:00 AM
+
+### 2. Hydrate Immediately
+
+Your body is dehydrated after 7-8 hours of sleep. Drinking water first thing:
+
+- Boosts metabolism by **24%**
+- Flushes out toxins
+- Improves mental clarity
+
+### 3. Exercise
+
+![Person exercising at dawn](https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800)
+
+Exercise releases endorphins and sets a positive tone. Even 20 minutes makes a difference.
+
+| Exercise Type | Duration | Benefits |
+|--------------|----------|----------|
+| Walking | 30 min | Low impact, stress relief |
+| HIIT | 20 min | Maximum calorie burn |
+| Yoga | 30 min | Flexibility, mindfulness |
+| Weight Training | 45 min | Strength, metabolism boost |
+
+### 4. Practice Gratitude
+
+Write down 3 things you're grateful for. This simple habit rewires your brain for positivity.
+
+> "Gratitude turns what we have into enough." — Aesop
+
+### 5. Eat a Nutritious Breakfast
+
+Fuel your body with:
+- **Protein** (eggs, Greek yogurt)
+- **Complex carbs** (oatmeal, whole grain toast)
+- **Healthy fats** (avocado, nuts)
+
+### 6. Meditate
+
+Even 10 minutes of meditation:
+
+1. Reduces stress hormones
+2. Improves focus
+3. Enhances emotional regulation
+4. Boosts creativity
+
+Try apps like [Headspace](https://headspace.com) or [Calm](https://calm.com) to get started.
+
+### 7. Plan Your Day
+
+Review your goals and prioritize your **top 3 tasks**. Use the [Eisenhower Matrix](/articles/pomodoro-technique-guide) to decide what's truly important.
+
+### 8. Learn Something New
+
+Spend 15-30 minutes on personal development:
+- Read a book
+- Listen to a podcast
+- Take an online course
+
+### 9. Avoid Your Phone
+
+The first hour should be **phone-free**. Checking emails and social media puts you in reactive mode instead of proactive mode.
+
+### 10. Review Your Goals
+
+Remind yourself of your long-term vision. This keeps you motivated and aligned with your purpose.
+
+---
+
+## Creating Your Own Routine
+
+Don't try to implement all 10 habits at once. Start with **2-3 habits** and build from there.
+
+### Sample Morning Schedule
+
+\`\`\`
+5:30 AM - Wake up, drink water
+5:45 AM - Meditate (15 min)
+6:00 AM - Exercise (30 min)
+6:30 AM - Shower & get ready
+7:00 AM - Nutritious breakfast
+7:30 AM - Plan the day, review goals
+8:00 AM - Start deep work
+\`\`\`
+
+## Key Takeaways
+
+1. **Consistency beats perfection** — Show up every day
+2. **Start small** — Add one habit at a time
+3. **Prepare the night before** — Lay out clothes, prep breakfast
+4. **Protect your morning** — Say no to early meetings when possible
+
+---
+
+*What morning habit will you start with? Share your thoughts in the comments below!*
+
+**Related Reading:**
+- [The 5 AM Club: Transform Your Morning](/articles/5am-club-transform-morning)
+- [The Pomodoro Technique](/articles/pomodoro-technique-guide)
+`,
+    category: "Productivity",
+    categorySlug: "productivity",
+    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    author: "Bowl of Growth",
+    readTime: 8,
+    createdAt: "2024-01-20",
+    featured: false,
+  },
+  {
     id: "1",
     title: "The 5 AM Club: Transform Your Morning, Transform Your Life",
     slug: "5am-club-transform-morning",
