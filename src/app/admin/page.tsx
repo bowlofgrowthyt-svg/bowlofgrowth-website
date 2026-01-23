@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { articles } from "@/data/articles";
+
+// Get existing article titles for duplicate checking
+const existingArticleTitles = articles.map((a) =>
+  a.title.toLowerCase().replace(/[^a-z0-9\s]/g, "")
+);
 
 const categories = [
   { name: "Personal Growth", slug: "personal-growth" },
@@ -12,54 +18,94 @@ const categories = [
   { name: "Career & Finance", slug: "career-finance" },
 ];
 
+// Check if a topic is similar to existing articles (avoid duplicates)
+function isTopicAlreadyExists(topic: string): boolean {
+  const normalizedTopic = topic.toLowerCase().replace(/[^a-z0-9\s]/g, "");
+  return existingArticleTitles.some((existingTitle) => {
+    // Check for exact match or high similarity
+    if (existingTitle === normalizedTopic) return true;
+    // Check if key phrases match
+    const topicWords = normalizedTopic.split(" ").filter((w) => w.length > 3);
+    const matchCount = topicWords.filter((word) =>
+      existingTitle.includes(word)
+    ).length;
+    return matchCount >= Math.min(3, topicWords.length * 0.6);
+  });
+}
+
+// Fresh topic suggestions - expanded and updated regularly
 const suggestedTopics: Record<string, string[]> = {
   "Personal Growth": [
-    "How to Build Unshakeable Self-Confidence",
-    "The Power of Daily Affirmations",
-    "Breaking Free from Limiting Beliefs",
-    "How to Develop a Growth Mindset",
-    "The Art of Self-Reflection",
-    "Building Healthy Habits That Stick",
+    "How to Overcome Imposter Syndrome",
+    "The Science of Building Self-Discipline",
+    "10 Journaling Prompts for Self-Discovery",
+    "How to Set Boundaries Without Guilt",
+    "The Power of Saying No",
+    "Finding Your Life Purpose: A Step-by-Step Guide",
+    "How to Forgive Yourself and Move Forward",
+    "Building Mental Toughness in Difficult Times",
+    "The Art of Letting Go of Perfectionism",
+    "How to Embrace Vulnerability as Strength",
   ],
   "Productivity": [
-    "The Pomodoro Technique: A Complete Guide",
-    "How to Beat Procrastination Forever",
-    "Morning Routines of Successful People",
     "Digital Minimalism for Better Focus",
     "Time Blocking: Plan Your Perfect Day",
     "The 80/20 Rule for Maximum Productivity",
+    "How to Stop Multitasking and Focus Deeply",
+    "The Best Apps for Productivity in 2025",
+    "How to Create a Productive Home Office",
+    "Energy Management vs Time Management",
+    "The Getting Things Done (GTD) Method Explained",
+    "How to Batch Similar Tasks for Efficiency",
+    "Weekly Review: The Secret to Staying Organized",
   ],
   "Emotional Intelligence": [
-    "Understanding Your Emotional Triggers",
-    "How to Manage Anxiety Naturally",
-    "The Art of Active Listening",
     "Building Emotional Resilience",
     "How to Handle Criticism Gracefully",
     "Developing Empathy in Relationships",
+    "How to Process Difficult Emotions Healthily",
+    "The Science of Emotional Regulation",
+    "How to Be More Self-Aware",
+    "Dealing with Toxic People Without Losing Yourself",
+    "How to Communicate Your Feelings Effectively",
+    "The Power of Emotional Validation",
+    "Understanding Love Languages for Better Relationships",
   ],
   "Book Summaries": [
-    "Atomic Habits by James Clear - Key Takeaways",
-    "The 7 Habits of Highly Effective People - Summary",
-    "Think and Grow Rich - Essential Lessons",
     "The Power of Now by Eckhart Tolle - Summary",
     "Deep Work by Cal Newport - Key Insights",
     "Mindset by Carol Dweck - Complete Summary",
+    "The Subtle Art of Not Giving a F*ck - Summary",
+    "Can't Hurt Me by David Goggins - Key Lessons",
+    "The Compound Effect by Darren Hardy - Summary",
+    "Essentialism by Greg McKeown - Key Takeaways",
+    "The Alchemist by Paulo Coelho - Life Lessons",
+    "Man's Search for Meaning by Viktor Frankl",
+    "The Four Agreements - Life-Changing Principles",
   ],
   "Success Stories": [
-    "From Failure to Fortune: Inspiring Comeback Stories",
-    "How Ordinary People Achieved Extraordinary Success",
-    "Lessons from Self-Made Millionaires",
     "Stories of Resilience and Triumph",
     "People Who Changed Their Lives After 40",
     "From Rock Bottom to the Top",
+    "How Elon Musk Overcame Near Bankruptcy",
+    "The Inspiring Journey of Howard Schultz",
+    "Athletes Who Came Back from Career-Ending Injuries",
+    "Entrepreneurs Who Started with Nothing",
+    "Teachers Who Became Millionaires",
+    "Single Parents Who Built Empires",
+    "Introverts Who Became Influential Leaders",
   ],
   "Career & Finance": [
-    "How to Negotiate Your Salary Like a Pro",
-    "Building Multiple Income Streams",
-    "The Basics of Investing for Beginners",
     "How to Find Your Dream Career",
     "Financial Mistakes to Avoid in Your 20s",
     "Building Wealth on Any Income",
+    "Side Hustles That Actually Work in 2025",
+    "How to Ask for a Promotion Confidently",
+    "Creating a Budget That Actually Works",
+    "Passive Income Ideas for Beginners",
+    "How to Network Without Being Awkward",
+    "Career Pivots: How to Switch Industries Successfully",
+    "Emergency Fund: How Much Do You Really Need?",
   ],
 };
 
@@ -185,6 +231,15 @@ export default function AdminPage() {
   const [currentGenerating, setCurrentGenerating] = useState("");
   const [batchTopics, setBatchTopics] = useState<BatchTopic[]>([]);
   const [batchMode, setBatchMode] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState("");
+
+  // Filter suggested topics to only show fresh ones (not already in articles.ts)
+  const getFreshTopics = (categoryName: string) => {
+    return (suggestedTopics[categoryName] || []).filter(
+      (t) => !isTopicAlreadyExists(t)
+    );
+  };
 
   const getCategorySlug = (catName: string) => {
     return categories.find((c) => c.name === catName)?.slug || "personal-growth";
@@ -266,6 +321,35 @@ export default function AdminPage() {
 
   const removeFromBatch = (t: string) => {
     setBatchTopics(batchTopics.filter((item) => item.topic !== t));
+  };
+
+  const saveToFile = async () => {
+    if (generatedArticles.length === 0) return;
+
+    setIsSaving(true);
+    setSaveSuccess("");
+    setError("");
+
+    try {
+      const response = await fetch("/api/save-articles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ articles: generatedArticles }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save articles");
+      }
+
+      setSaveSuccess(`${data.addedCount} articles saved to articles.ts! Refresh page to see updated suggestions.`);
+      setGeneratedArticles([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save articles");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const copyAllArticlesJSON = () => {
@@ -366,12 +450,22 @@ export default function AdminPage() {
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="e.g., How to build a morning routine that sticks"
-                  className="w-full px-4 py-3 rounded-xl border border-[var(--border)] focus:outline-none focus:border-[var(--primary)] mb-4"
+                  className={`w-full px-4 py-3 rounded-xl border focus:outline-none mb-2 ${
+                    topic && isTopicAlreadyExists(topic)
+                      ? "border-yellow-400 focus:border-yellow-500"
+                      : "border-[var(--border)] focus:border-[var(--primary)]"
+                  }`}
                 />
+                {topic && isTopicAlreadyExists(topic) && (
+                  <p className="text-xs text-yellow-600 mb-2 flex items-center gap-1">
+                    <span>⚠️</span>
+                    <span>Similar article may already exist. Consider a different angle.</span>
+                  </p>
+                )}
                 <button
                   onClick={handleSingleGenerate}
                   disabled={isGenerating}
-                  className="w-full py-3 bg-[var(--primary)] text-white rounded-xl font-medium hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50"
+                  className="w-full py-3 bg-[var(--primary)] text-white rounded-xl font-medium hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50 mt-2"
                 >
                   {isGenerating ? `Generating: ${currentGenerating.slice(0, 30)}...` : "Generate Article"}
                 </button>
@@ -423,31 +517,43 @@ export default function AdminPage() {
                   </p>
                 )}
 
-                <div className="flex gap-2 mb-4">
-                  <input
-                    type="text"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    placeholder="Custom topic..."
-                    className="flex-1 px-4 py-2 rounded-xl border border-[var(--border)] focus:outline-none focus:border-[var(--primary)] text-sm"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && topic.trim()) {
-                        addToBatch(topic.trim());
-                        setTopic("");
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      if (topic.trim()) {
-                        addToBatch(topic.trim());
-                        setTopic("");
-                      }
-                    }}
-                    className="px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
-                  >
-                    Add
-                  </button>
+                <div className="space-y-2 mb-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                      placeholder="Custom topic..."
+                      className={`flex-1 px-4 py-2 rounded-xl border focus:outline-none text-sm ${
+                        topic && isTopicAlreadyExists(topic)
+                          ? "border-yellow-400 focus:border-yellow-500"
+                          : "border-[var(--border)] focus:border-[var(--primary)]"
+                      }`}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && topic.trim()) {
+                          addToBatch(topic.trim());
+                          setTopic("");
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        if (topic.trim()) {
+                          addToBatch(topic.trim());
+                          setTopic("");
+                        }
+                      }}
+                      className="px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {topic && isTopicAlreadyExists(topic) && (
+                    <p className="text-xs text-yellow-600 flex items-center gap-1">
+                      <span>⚠️</span>
+                      <span>Similar article may already exist</span>
+                    </p>
+                  )}
                 </div>
 
                 <button
@@ -464,25 +570,47 @@ export default function AdminPage() {
 
             {/* Suggested Topics */}
             <div className="bg-white rounded-2xl shadow-sm border border-[var(--border)] p-6">
-              <h3 className="font-semibold text-[var(--foreground)] mb-3">
-                Suggested Topics for {category}
-              </h3>
-              <div className="space-y-2">
-                {suggestedTopics[category]?.map((t, i) => (
-                  <button
-                    key={i}
-                    onClick={() => (batchMode ? addToBatch(t) : setTopic(t))}
-                    disabled={batchTopics.some((item) => item.topic === t)}
-                    className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-[var(--secondary)] text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between"
-                  >
-                    <span>{t}</span>
-                    {batchMode && (
-                      <span className="text-[var(--primary)]">
-                        {batchTopics.some((item) => item.topic === t) ? "Added" : "+ Add"}
-                      </span>
-                    )}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-[var(--foreground)]">
+                  Fresh Topics for {category}
+                </h3>
+                <span className="text-xs text-[var(--muted)]">
+                  {getFreshTopics(category).length} available
+                </span>
+              </div>
+              {getFreshTopics(category).length > 0 ? (
+                <div className="space-y-2">
+                  {getFreshTopics(category).map((t, i) => (
+                    <button
+                      key={i}
+                      onClick={() => (batchMode ? addToBatch(t) : setTopic(t))}
+                      disabled={batchTopics.some((item) => item.topic === t)}
+                      className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-[var(--secondary)] text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between"
+                    >
+                      <span>{t}</span>
+                      {batchMode && (
+                        <span className="text-[var(--primary)]">
+                          {batchTopics.some((item) => item.topic === t) ? "Added" : "+ Add"}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-[var(--muted)]">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <span className="text-xl">✓</span>
+                  </div>
+                  <p className="text-sm">All suggested topics covered!</p>
+                  <p className="text-xs mt-1">Enter custom topics above</p>
+                </div>
+              )}
+
+              {/* Existing articles count */}
+              <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                <p className="text-xs text-[var(--muted)]">
+                  📚 {articles.length} articles already published
+                </p>
               </div>
             </div>
 
@@ -499,12 +627,21 @@ export default function AdminPage() {
                   Generated Articles ({generatedArticles.length})
                 </h2>
                 {generatedArticles.length > 0 && (
-                  <button
-                    onClick={copyAllArticlesJSON}
-                    className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-dark)] transition-colors"
-                  >
-                    Copy All
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveToFile}
+                      disabled={isSaving}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                    >
+                      {isSaving ? "Saving..." : "Save to File"}
+                    </button>
+                    <button
+                      onClick={copyAllArticlesJSON}
+                      className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-dark)] transition-colors"
+                    >
+                      Copy
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -566,14 +703,24 @@ export default function AdminPage() {
               )}
             </div>
 
+            {saveSuccess && (
+              <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded-xl">
+                <div className="flex items-center gap-2 text-green-800">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-medium">{saveSuccess}</span>
+                </div>
+              </div>
+            )}
+
             {generatedArticles.length > 0 && (
-              <div className="mt-4 p-4 bg-green-50 rounded-xl">
-                <h4 className="font-medium text-green-800 mb-2">Next Steps:</h4>
-                <ol className="text-sm text-green-700 space-y-1 list-decimal list-inside">
-                  <li>Click &quot;Copy All&quot; button above</li>
-                  <li>Paste the copied code in this chat</li>
-                  <li>Claude will add it to your site automatically!</li>
-                </ol>
+              <div className="mt-4 p-4 bg-blue-50 rounded-xl">
+                <h4 className="font-medium text-blue-800 mb-2">Save Your Articles:</h4>
+                <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                  <li><strong>Save to File</strong> (Dev Mode): Automatically adds to articles.ts</li>
+                  <li><strong>Copy</strong>: Copy code and share with Claude to add manually</li>
+                </ul>
               </div>
             )}
           </div>
