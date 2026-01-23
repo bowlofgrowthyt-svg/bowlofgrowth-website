@@ -2,6 +2,7 @@ import ArticleCard from "@/components/ArticleCard";
 import CategoryCard from "@/components/CategoryCard";
 import ParallaxHero from "@/components/ParallaxHero";
 import Sidebar from "@/components/Sidebar";
+import Newsletter from "@/components/Newsletter";
 import { getCategoriesWithCounts } from "@/data/categories";
 import { getFeaturedArticle, getRecentArticles } from "@/data/articles";
 import Link from "next/link";
@@ -187,37 +188,7 @@ export default function Home() {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-2xl mx-auto px-4 text-center">
-          <span className="inline-block px-4 py-1 bg-[var(--secondary)] text-[var(--primary)] rounded-full text-sm font-medium mb-4">
-            Join Our Community
-          </span>
-          <h2 className="text-3xl font-bold text-[var(--foreground)] mb-4">
-            Get Daily Wisdom in Your Inbox
-          </h2>
-          <p className="text-[var(--muted)] mb-8">
-            Join thousands of readers receiving daily inspiration, practical tips, and mindful
-            strategies to live a more meaningful life.
-          </p>
-          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-5 py-4 rounded-full border border-[var(--border)] focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
-              required
-            />
-            <button
-              type="submit"
-              className="px-8 py-4 bg-[var(--primary)] text-white rounded-full font-semibold hover:bg-[var(--primary-dark)] transition-colors"
-            >
-              Subscribe
-            </button>
-          </form>
-          <p className="text-xs text-[var(--muted)] mt-4">
-            No spam, ever. Unsubscribe anytime. Read our privacy policy.
-          </p>
-        </div>
-      </section>
+      <Newsletter />
     </div>
   );
 }

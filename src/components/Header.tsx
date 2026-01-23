@@ -98,43 +98,55 @@ export default function Header() {
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  onBlur={() => setTimeout(() => setIsProfileOpen(false), 150)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--secondary)] hover:bg-[var(--primary)]/10 transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--secondary)] hover:bg-[var(--primary)]/10 transition-colors cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center text-white font-medium">
-                    {user.email?.charAt(0).toUpperCase()}
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] flex items-center justify-center text-white font-bold text-sm">
+                    {(profile?.full_name?.charAt(0) || user.email?.charAt(0) || "U").toUpperCase()}
                   </div>
-                  <span className="text-sm font-medium text-[var(--foreground)] hidden lg:block">
-                    {profile?.full_name || user.email?.split("@")[0]}
+                  <span className="text-sm font-medium text-[var(--foreground)] hidden lg:block max-w-[120px] truncate">
+                    {profile?.full_name || user.email?.split("@")[0] || "User"}
                   </span>
+                  <svg className={`w-4 h-4 text-[var(--muted)] transition-transform ${isProfileOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
 
                 {isProfileOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-[var(--border)] py-2 fade-in">
-                    <div className="px-4 py-2 border-b border-[var(--border)]">
-                      <p className="text-sm font-medium text-[var(--foreground)]">
-                        {profile?.full_name || "User"}
-                      </p>
-                      <p className="text-xs text-[var(--muted)] truncate">{user.email}</p>
-                      {profile?.points !== undefined && (
-                        <p className="text-xs text-[var(--primary)] mt-1">
-                          {profile.points} points
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsProfileOpen(false)}
+                    />
+                    <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-[var(--border)] py-2 fade-in z-50">
+                      <div className="px-4 py-3 border-b border-[var(--border)]">
+                        <p className="text-sm font-semibold text-[var(--foreground)]">
+                          {profile?.full_name || user.email?.split("@")[0] || "User"}
                         </p>
-                      )}
+                        <p className="text-xs text-[var(--muted)] truncate">{user.email}</p>
+                        {profile?.points !== undefined && (
+                          <div className="flex items-center gap-1 mt-2">
+                            <span className="text-lg">🏆</span>
+                            <span className="text-sm font-medium text-[var(--primary)]">
+                              {profile.points} points
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <Link
+                        href="/games"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--muted)] hover:text-[var(--primary)] hover:bg-[var(--secondary)] transition-colors"
+                      >
+                        <span>🎮</span> Play Games
+                      </Link>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2 text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <span>👋</span> Sign Out
+                      </button>
                     </div>
-                    <Link
-                      href="/games"
-                      className="block px-4 py-2 text-sm text-[var(--muted)] hover:text-[var(--primary)] hover:bg-[var(--secondary)] transition-colors"
-                    >
-                      My Games
-                    </Link>
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
+                  </>
                 )}
               </div>
             ) : (
