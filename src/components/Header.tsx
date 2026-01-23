@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 const categories = [
@@ -18,12 +18,21 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { user, profile, loading, signOut } = useAuth();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
     setIsProfileOpen(false);
   };
+
+  const toggleProfileDropdown = useCallback(() => {
+    setIsProfileOpen(prev => !prev);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[var(--border)]">
@@ -92,13 +101,13 @@ export default function Header() {
               Brain Games
             </Link>
 
-            {loading ? (
+            {!mounted || loading ? (
               <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
             ) : user ? (
               <div className="relative z-50">
                 <button
                   type="button"
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  onClick={toggleProfileDropdown}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 hover:bg-purple-200 transition-colors cursor-pointer"
                 >
                   <div

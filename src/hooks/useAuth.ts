@@ -27,21 +27,37 @@ export function useAuth() {
 
     // Get initial session
     const getSession = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        setProfile(profile);
+        if (userError) {
+          console.error("Auth getUser error:", userError);
+          setLoading(false);
+          return;
+        }
+
+        setUser(user);
+
+        if (user) {
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", user.id)
+              .single();
+            setProfile(profile);
+          } catch (profileError) {
+            console.error("Profile fetch error:", profileError);
+          }
+        }
+      } catch (error) {
+        console.error("Session error:", error);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     getSession();

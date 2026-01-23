@@ -33,10 +33,7 @@ export default function Newsletter() {
     }
   }, [user, mounted, email]);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const doSubscribe = useCallback(async () => {
     const currentEmail = email.trim();
 
     if (!currentEmail || !currentEmail.includes("@")) {
@@ -78,6 +75,18 @@ export default function Newsletter() {
       setMessage(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     }
   }, [email, user?.id]);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    doSubscribe();
+  };
+
+  const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    doSubscribe();
+  };
 
   // Already subscribed view
   if (isSubscribed) {
@@ -138,7 +147,8 @@ export default function Newsletter() {
               autoComplete="email"
             />
             <button
-              type="submit"
+              type="button"
+              onClick={handleButtonClick}
               disabled={status === "loading"}
               className="px-8 py-4 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
