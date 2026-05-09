@@ -4,7 +4,8 @@
       "command": "npx",
       "args": ["-y", "@felores/kie-ai-mcp-server"],
       "env": {
-        "KIE_AI_API_KEY": "${KIE_AI_API_KEY}"
+        "KIE_AI_API_KEY": "${KIE_AI_API_KEY}",
+        "KIE_AI_ENABLED_TOOLS": "nano_banana_image,gpt_image_2,midjourney_generate,happyhorse_video,bytedance_seedance_video,kling_video"
       }
     }
   }
